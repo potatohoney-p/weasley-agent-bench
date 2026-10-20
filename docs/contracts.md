@@ -119,6 +119,16 @@ averaging, confidence interval, provider ranking, or inference of causation is
 performed. Store both input run files and the exact suite with reports when
 using the outputs as evidence.
 
+### Optional provenance sidecar
+
+Saved runs remain version 1 and do not require provenance fields. The separate
+`create-provenance` / `verify-provenance` workflow binds one suite and run by
+canonical digest plus an externally declared runner revision. Verification
+rejects mismatched artifacts and, when requested, a mismatched expected revision.
+It does not change scoring or prevent intentional rescoring. See the strict
+[sidecar schema, canonicalization, and compatibility policy](provenance.md).
+Unsigned hashes establish consistency, not actual execution or authenticity.
+
 ## Repeated-run batches
 
 `compare-repeated` accepts the same suite plus two strict version 1 batch

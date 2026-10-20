@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
@@ -18,6 +19,13 @@ BUDGET_FIELDS = ("max_tool_calls", *(f"max_{key}" for key in USAGE_FIELDS))
 # Durations can be fractional, so comparison may promote integers to floats.
 # Use the JSON/IEEE-754 safe-integer ceiling before that arithmetic occurs.
 MAX_DURATION_MS = 2**53 - 1
+
+
+def _document_sha256(document: dict) -> str:
+    """Hash a validated document; object order is ignored, array order retained."""
+    canonical = json.dumps(document, sort_keys=True, ensure_ascii=True,
+                           separators=(",", ":"), allow_nan=False)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _fail(path: str, detail: str) -> None:

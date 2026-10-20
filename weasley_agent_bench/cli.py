@@ -9,6 +9,7 @@ import sys
 from .contracts import ContractError, load_document
 from .scoring import compare, evaluate
 from .repeated import compare_repeated
+from .provenance import create_provenance, verify_provenance
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -27,6 +28,15 @@ def main(argv: list[str] | None = None) -> int:
     repeated.add_argument("candidate")
     repeated.add_argument("--seed", type=int, default=0)
     repeated.add_argument("--resamples", type=int, default=10000)
+    record = sub.add_parser("create-provenance", help="emit an unsigned suite/run consistency sidecar")
+    record.add_argument("suite")
+    record.add_argument("run")
+    record.add_argument("--runner-revision", required=True, help="declared external runner revision")
+    verify = sub.add_parser("verify-provenance", help="check a sidecar against saved suite/run artifacts")
+    verify.add_argument("suite")
+    verify.add_argument("run")
+    verify.add_argument("provenance")
+    verify.add_argument("--expected-runner-revision", help="optionally require this exact declared revision")
     args = parser.parse_args(argv)
     try:
         suite = load_document(args.suite)
@@ -37,12 +47,21 @@ def main(argv: list[str] | None = None) -> int:
             report = compare(suite, load_document(args.baseline), load_document(args.candidate))
             # This is a regression gate, not a claim that every candidate task passed.
             passed = report["no_regressions"]
-        else:
+        elif args.command == "compare-repeated":
             report = compare_repeated(
                 suite, load_document(args.baseline), load_document(args.candidate),
                 seed=args.seed, resamples=args.resamples,
             )
             # Valid descriptive analysis, even when all observed changes are negative.
+            passed = True
+        elif args.command == "create-provenance":
+            report = create_provenance(suite, load_document(args.run), runner_revision=args.runner_revision)
+            passed = True
+        else:
+            report = verify_provenance(
+                suite, load_document(args.run), load_document(args.provenance),
+                expected_runner_revision=args.expected_runner_revision,
+            )
             passed = True
         print(json.dumps(report, sort_keys=True, ensure_ascii=True, indent=2, allow_nan=False))
         return 0 if passed else 1

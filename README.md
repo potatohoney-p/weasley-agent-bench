@@ -118,6 +118,14 @@ not a significance or regression gate. See the [method and input format](docs/re
 3. Evaluate the saved result. Compare two complete result sets against the same
    suite to gate per-task regressions.
 
+For optional export-time suite/run binding, use `create-provenance` with a
+declared runner revision and check the sidecar with `verify-provenance` before
+scoring. Verification detects changed/swapped artifacts and can require an
+expected revision label. Existing saved runs and intentional rescoring remain
+unchanged. See [provenance sidecars](docs/provenance.md) for CLI/API examples,
+memory-export support, canonicalization, and the trust boundary. Unsigned
+digests establish consistency, not authenticity or proof of execution.
+
 ```python
 from weasley_agent_bench import evaluate, load_document
 
@@ -143,6 +151,10 @@ assertion paths are present, so use synthetic or appropriately reviewed inputs.
 | `0` | `evaluate`: every task passed. `compare`: no baseline pass became a failure. `compare-repeated`: valid descriptive analysis, even for negative changes. |
 | `1` | A task failed evaluation or a comparison found a regression. |
 | `2` | Invalid input or command usage; input errors are JSON on stderr. |
+
+`create-provenance` and `verify-provenance` exit 0 on successful creation or
+consistency verification, and 2 on invalid input or a mismatch. Verification
+does not grade task success; a consistent failed run still needs evaluation.
 
 `compare` is a regression gate. Its `candidate_passed` field separately states
 whether **all** candidate tasks passed. Unchanged failures are still failures,

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from typing import Any
 
-from .contracts import ContractError, USAGE_FIELDS, validate_run, validate_suite
+from .contracts import ContractError, USAGE_FIELDS, _document_sha256, validate_run, validate_suite
 
 _MISSING = object()
 
@@ -124,11 +122,10 @@ def evaluate(suite: dict, run: dict) -> dict:
             "checks": checks,
         })
     passed = sum(row["passed"] for row in rows)
-    canonical = json.dumps(suite, sort_keys=True, ensure_ascii=True, separators=(",", ":"), allow_nan=False)
     return {
         "schema_version": 1,
         "suite_id": suite["suite_id"],
-        "suite_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        "suite_sha256": _document_sha256(suite),
         "run_id": run["run_id"],
         "passed": passed == len(rows),
         "summary": {"total": len(rows), "passed": passed, "failed": len(rows) - passed,

@@ -12,7 +12,7 @@ import platform
 import statistics
 import time
 
-from weasley_agent_bench import evaluate
+from weasley_agent_bench import ContractError, create_provenance, evaluate
 
 
 def make_episodes() -> list[dict]:
@@ -194,9 +194,20 @@ def run_experiment(timing_trials: int = 0) -> tuple[dict, dict, dict, list[dict]
     return report, suite, runs, episodes
 
 
-def export(directory: Path, report: dict, suite: dict, runs: dict, episodes: list) -> None:
-    files = {"report.json": report, "suite.json": suite, "episodes.json": episodes,
-             **{f"{name}.json": run for name, run in runs.items()}}
+def export(
+    directory: Path, report: dict, suite: dict, runs: dict, episodes: list,
+    *, runner_revision: str | None = None,
+) -> None:
+    artifacts = [("report.json", report), ("suite.json", suite), ("episodes.json", episodes),
+                 *((f"{name}.json", run) for name, run in runs.items())]
+    if runner_revision is not None:
+        artifacts.extend(
+            (f"{name}.provenance.json", create_provenance(suite, run, runner_revision=runner_revision))
+            for name, run in runs.items()
+        )
+        if len({name for name, _ in artifacts}) != len(artifacts):
+            raise ContractError("export: generated artifact filenames must be unique")
+    files = dict(artifacts)
     if any((directory / name).exists() for name in files):
         raise FileExistsError("export would overwrite an existing artifact; choose a fresh directory")
     directory.mkdir(parents=True, exist_ok=True)
@@ -208,14 +219,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--timing-trials", type=int, default=0, help="optional measured lookups per question, 0..10000")
     parser.add_argument("--output-dir", type=Path, help="optional fresh directory for suite, episodes, runs and report")
+    parser.add_argument("--runner-revision", help="include unsigned provenance sidecars with this declared revision")
     args = parser.parse_args(argv)
     if not 0 <= args.timing_trials <= 10000:
         parser.error("--timing-trials must be from 0 to 10000")
+    if args.runner_revision is not None and args.output_dir is None:
+        parser.error("--runner-revision requires --output-dir")
     artifacts = run_experiment(args.timing_trials)
     if args.output_dir:
         try:
-            export(args.output_dir, *artifacts)
-        except OSError as error:
+            export(args.output_dir, *artifacts, runner_revision=args.runner_revision)
+        except (OSError, ContractError) as error:
             parser.error(str(error))
     print(json.dumps(artifacts[0], sort_keys=True, ensure_ascii=True, indent=2))
     return 0

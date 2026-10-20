@@ -3,8 +3,9 @@
 from .contracts import ContractError, load_document, validate_run, validate_suite
 from .scoring import compare, evaluate
 from .repeated import compare_repeated
+from .provenance import create_provenance, verify_provenance
 
 __all__ = [
     "ContractError", "compare", "compare_repeated", "evaluate", "load_document", "validate_run",
-    "validate_suite",
+    "validate_suite", "create_provenance", "verify_provenance",
 ]

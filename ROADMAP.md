@@ -22,8 +22,14 @@
   correlated tasks do not narrow the interval, and missing/duplicated trials
   or incomplete runs fail. Intervals are conditional on the fixed suite and
   independent representative trial pairs, not provider rankings.
+- **Optional artifact provenance:** separate versioned sidecars bind one suite
+  and saved run to canonical digests and a declared runner revision. Acceptance:
+  swapped/changed inputs and explicit revision mismatches fail verification;
+  synthetic exporter sidecars roundtrip; legacy scoring and intentional
+  rescoring remain unchanged. Hashes establish consistency, not authenticity
+  or proof of actual execution.
 
-Tests, examples, documentation, and packaging support those four outcomes. They
+Tests, examples, documentation, and packaging support those five outcomes. They
 are not additional work units.
 
 ## Next, in priority order
@@ -32,15 +38,11 @@ are not additional work units.
    adapter after validating stable trace fields. Acceptance: a sanitized frozen
    trace and a hand-written equivalent run produce identical evaluation reports;
    missing tool results fail export. No live API call is required.
-2. **Result provenance.** Bind exports to a suite digest and runner revision.
-   Acceptance: mismatched contracts or revisions are visibly rejected or flagged
-   under a documented compatibility policy. Do not describe unsigned metadata as
-   proof of execution.
-3. **Contract lint for impossible budgets.** Detect contradictions between required
+2. **Contract lint for impossible budgets.** Detect contradictions between required
    tool counts, exact sequences, and caps before a run. Acceptance: a suite
    explicitly requesting two required calls under a cap of one fails with a path
    to the contradiction; intentionally negative tests have an explicit mode.
-4. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
+3. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
    if real suite sizes justify it. Acceptance: a deterministic large fixture
    matches the current in-memory score with documented memory bounds and line
    numbers for malformed records.
