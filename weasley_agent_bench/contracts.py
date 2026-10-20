@@ -15,6 +15,9 @@ class ContractError(ValueError):
 
 USAGE_FIELDS = ("input_tokens", "output_tokens", "duration_ms")
 BUDGET_FIELDS = ("max_tool_calls", *(f"max_{key}" for key in USAGE_FIELDS))
+# Durations can be fractional, so comparison may promote integers to floats.
+# Use the JSON/IEEE-754 safe-integer ceiling before that arithmetic occurs.
+MAX_DURATION_MS = 2**53 - 1
 
 
 def _fail(path: str, detail: str) -> None:
@@ -44,13 +47,15 @@ def _array(value: Any, path: str) -> None:
         _fail(path, "expected an array")
 
 
-def _number(value: Any, path: str, *, integer: bool = False) -> None:
+def _number(value: Any, path: str, *, integer: bool = False, maximum: int | None = None) -> None:
     if type(value) not in (int, float) or value < 0 or (
         type(value) is float and not math.isfinite(value)
     ):
         _fail(path, "expected a finite non-negative number")
     if integer and type(value) is not int:
         _fail(path, "expected an integer")
+    if maximum is not None and value > maximum:
+        _fail(path, f"must not exceed {maximum}")
 
 
 def _json_value(value: Any, path: str) -> None:
@@ -149,7 +154,8 @@ def validate_suite(suite: Any) -> None:
             if not task["budget"]:
                 _fail(f"{path}.budget", "must not be empty")
             for field, limit in task["budget"].items():
-                _number(limit, f"{path}.budget.{field}", integer=field != "max_duration_ms")
+                _number(limit, f"{path}.budget.{field}", integer=field != "max_duration_ms",
+                        maximum=MAX_DURATION_MS if field == "max_duration_ms" else None)
 
 
 def validate_run(run: Any, suite: dict) -> None:
@@ -189,7 +195,8 @@ def validate_run(run: Any, suite: dict) -> None:
         if "usage" in result:
             _object(result["usage"], f"{path}.usage", set(), set(USAGE_FIELDS))
             for field, value in result["usage"].items():
-                _number(value, f"{path}.usage.{field}", integer=field != "duration_ms")
+                _number(value, f"{path}.usage.{field}", integer=field != "duration_ms",
+                        maximum=MAX_DURATION_MS if field == "duration_ms" else None)
 
 
 def _pairs(pairs: list[tuple[str, Any]]) -> dict:

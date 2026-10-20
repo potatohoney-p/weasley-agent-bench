@@ -47,7 +47,12 @@ tool, or a meaningful tool contract; an exact empty sequence asserts no calls.
 - `forbidden_tools`: any recorded attempt fails the contract, even if it
   returned an error. A tool cannot be both required and forbidden.
 - `budget`: inclusive upper bounds. Tool calls and token limits are
-  non-negative integers. Duration is non-negative finite milliseconds. A
+  non-negative integers. Duration is non-negative finite milliseconds, at most
+  **9,007,199,254,740,991** (`2^53 - 1`) for both `max_duration_ms` and recorded
+  `duration_ms`. Fractional durations are allowed. This numeric ceiling avoids
+  overflowing mixed integer/float arithmetic in comparison; it is not a runtime
+  timeout. Very large durations can still lose sub-millisecond precision under
+  ordinary floating-point arithmetic. A
   capped usage metric must be recorded; missing usage fails that cap. All
   usage is reported by the external runner. These are scoring gates, not
   runtime cancellation or billing controls.

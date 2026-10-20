@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 from pathlib import Path
 import subprocess
 import sys
@@ -141,6 +142,27 @@ class ScoringTests(unittest.TestCase):
 
 
 class ComparisonTests(unittest.TestCase):
+    def test_mixed_huge_integer_and_fractional_duration_is_contract_error(self):
+        for baseline_duration, candidate_duration in ((10**1000, 0.5), (0.5, 10**1000)):
+            with self.subTest(huge_on_baseline=baseline_duration != 0.5):
+                suite, baseline = single()
+                candidate = copy.deepcopy(baseline)
+                baseline["results"][0]["usage"] = {"duration_ms": baseline_duration}
+                candidate["results"][0]["usage"] = {"duration_ms": candidate_duration}
+                with self.assertRaisesRegex(ContractError, "duration_ms.*must not exceed"):
+                    compare(suite, baseline, candidate)
+
+    def test_bounded_integer_and_fractional_duration_deltas_remain_finite(self):
+        for baseline_duration, candidate_duration in ((2**53 - 1, 0.5), (0.5, 2**53 - 1), (0.5, 1.25)):
+            with self.subTest(baseline=baseline_duration, candidate=candidate_duration):
+                suite, baseline = single()
+                candidate = copy.deepcopy(baseline)
+                baseline["results"][0]["usage"] = {"duration_ms": baseline_duration}
+                candidate["results"][0]["usage"] = {"duration_ms": candidate_duration}
+                delta = compare(suite, baseline, candidate)["changes"][0]["usage_delta"]["duration_ms"]
+                self.assertTrue(math.isfinite(delta))
+                self.assertEqual(delta, candidate_duration - baseline_duration)
+
     def test_improvement_and_regression_are_paired_by_id(self):
         suite, baseline, candidate = fixture("suite"), fixture("baseline"), fixture("candidate")
         candidate["results"].reverse()
@@ -221,6 +243,24 @@ class ValidationTests(unittest.TestCase):
         run["results"][0]["usage"] = {"input_tokens": 10**1000}
         suite["tasks"][0]["budget"] = {"max_input_tokens": 10**1000}
         self.assertTrue(evaluate(suite, run)["passed"])
+
+    def test_duration_bound_applies_to_usage_and_budget(self):
+        for value in (0, 0.5, 2**53 - 1, float(2**53 - 1), 2**53, float(2**53), 10**1000):
+            with self.subTest(value=str(value)[:30]):
+                suite, run = single()
+                run["results"][0]["usage"] = {"duration_ms": value}
+                if value <= 2**53 - 1:
+                    self.assertTrue(evaluate(suite, run)["passed"])
+                else:
+                    with self.assertRaisesRegex(ContractError, "usage.duration_ms.*must not exceed"):
+                        evaluate(suite, run)
+                run["results"][0]["usage"]["duration_ms"] = 0
+                suite["tasks"][0]["budget"] = {"max_duration_ms": value}
+                if value <= 2**53 - 1:
+                    self.assertTrue(evaluate(suite, run)["passed"])
+                else:
+                    with self.assertRaisesRegex(ContractError, "budget.max_duration_ms.*must not exceed"):
+                        evaluate(suite, run)
 
     def test_escaped_json_surrogates_do_not_crash_report_hashing(self):
         suite, run = single("\ud800", "\ud800")
@@ -310,6 +350,21 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertEqual(result.stdout, "")
         self.assertIn("error", json.loads(result.stderr))
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_mixed_huge_duration_compare_returns_json_error_and_exit_two(self):
+        suite, baseline = single()
+        candidate = copy.deepcopy(baseline)
+        baseline["results"][0]["usage"] = {"duration_ms": 10**1000}
+        candidate["results"][0]["usage"] = {"duration_ms": 0.5}
+        with tempfile.TemporaryDirectory() as directory:
+            paths = [Path(directory) / name for name in ("suite.json", "baseline.json", "candidate.json")]
+            for path, document in zip(paths, (suite, baseline, candidate)):
+                path.write_text(json.dumps(document), encoding="utf-8")
+            result = self.cli("compare", *(str(path) for path in paths))
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("duration_ms", json.loads(result.stderr)["error"])
         self.assertNotIn("Traceback", result.stderr)
 
     def test_cli_report_is_byte_identical_on_repeated_runs(self):
