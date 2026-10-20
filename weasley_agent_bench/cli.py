@@ -8,6 +8,7 @@ import sys
 
 from .contracts import ContractError, load_document
 from .scoring import compare, evaluate
+from .repeated import compare_repeated
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -20,16 +21,29 @@ def main(argv: list[str] | None = None) -> int:
     diff.add_argument("suite")
     diff.add_argument("baseline")
     diff.add_argument("candidate")
+    repeated = sub.add_parser("compare-repeated", help="describe paired trials on a fixed task suite")
+    repeated.add_argument("suite")
+    repeated.add_argument("baseline")
+    repeated.add_argument("candidate")
+    repeated.add_argument("--seed", type=int, default=0)
+    repeated.add_argument("--resamples", type=int, default=10000)
     args = parser.parse_args(argv)
     try:
         suite = load_document(args.suite)
         if args.command == "evaluate":
             report = evaluate(suite, load_document(args.run))
             passed = report["passed"]
-        else:
+        elif args.command == "compare":
             report = compare(suite, load_document(args.baseline), load_document(args.candidate))
             # This is a regression gate, not a claim that every candidate task passed.
             passed = report["no_regressions"]
+        else:
+            report = compare_repeated(
+                suite, load_document(args.baseline), load_document(args.candidate),
+                seed=args.seed, resamples=args.resamples,
+            )
+            # Valid descriptive analysis, even when all observed changes are negative.
+            passed = True
         print(json.dumps(report, sort_keys=True, ensure_ascii=True, indent=2, allow_nan=False))
         return 0 if passed else 1
     except (ContractError, RecursionError) as error:

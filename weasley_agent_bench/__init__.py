@@ -2,8 +2,9 @@
 
 from .contracts import ContractError, load_document, validate_run, validate_suite
 from .scoring import compare, evaluate
+from .repeated import compare_repeated
 
 __all__ = [
-    "ContractError", "compare", "evaluate", "load_document", "validate_run",
+    "ContractError", "compare", "compare_repeated", "evaluate", "load_document", "validate_run",
     "validate_suite",
 ]

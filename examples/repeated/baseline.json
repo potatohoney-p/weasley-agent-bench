@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-repeated-v1",
+  "batch_id": "synthetic-baseline",
+  "trials": [
+    {
+      "trial_id": "trial-0",
+      "run": {
+        "schema_version": 1,
+        "suite_id": "synthetic-repeated-v1",
+        "run_id": "baseline-0",
+        "results": [
+          {
+            "task_id": "task-0",
+            "status": "completed",
+            "final": true,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-1",
+            "status": "completed",
+            "final": true,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-2",
+            "status": "completed",
+            "final": false,
+            "tool_calls": []
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "trial-1",
+      "run": {
+        "schema_version": 1,
+        "suite_id": "synthetic-repeated-v1",
+        "run_id": "baseline-1",
+        "results": [
+          {
+            "task_id": "task-0",
+            "status": "completed",
+            "final": true,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-1",
+            "status": "completed",
+            "final": false,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-2",
+            "status": "completed",
+            "final": false,
+            "tool_calls": []
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "trial-2",
+      "run": {
+        "schema_version": 1,
+        "suite_id": "synthetic-repeated-v1",
+        "run_id": "baseline-2",
+        "results": [
+          {
+            "task_id": "task-0",
+            "status": "completed",
+            "final": false,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-1",
+            "status": "completed",
+            "final": true,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-2",
+            "status": "completed",
+            "final": true,
+            "tool_calls": []
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "trial-3",
+      "run": {
+        "schema_version": 1,
+        "suite_id": "synthetic-repeated-v1",
+        "run_id": "baseline-3",
+        "results": [
+          {
+            "task_id": "task-0",
+            "status": "completed",
+            "final": true,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-1",
+            "status": "completed",
+            "final": true,
+            "tool_calls": []
+          },
+          {
+            "task_id": "task-2",
+            "status": "completed",
+            "final": false,
+            "tool_calls": []
+          }
+        ]
+      }
+    }
+  ]
+}

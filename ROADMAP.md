@@ -15,8 +15,15 @@
   provenance checks. Acceptance: no future-label leakage, 48 reproducible held-out
   questions, baseline scores 19/24/48 of 48, exported runs reproduce scores through
   the public CLI, and optional measured lookup timing stays separate from scoring.
+- **Repeated-run analysis:** complete runs pair by trial/task ID; bootstrap
+  resampling retains the whole paired suite trial and uses a fixed seed.
+  Acceptance: the synthetic fixture's counts/interval match an exhaustive
+  reference distribution, reordering does not change the report, duplicated
+  correlated tasks do not narrow the interval, and missing/duplicated trials
+  or incomplete runs fail. Intervals are conditional on the fixed suite and
+  independent representative trial pairs, not provider rankings.
 
-Tests, examples, documentation, and packaging support those three outcomes. They
+Tests, examples, documentation, and packaging support those four outcomes. They
 are not additional work units.
 
 ## Next, in priority order
@@ -25,19 +32,15 @@ are not additional work units.
    adapter after validating stable trace fields. Acceptance: a sanitized frozen
    trace and a hand-written equivalent run produce identical evaluation reports;
    missing tool results fail export. No live API call is required.
-2. **Repeated-run analysis.** Preserve task/trial pairing and bootstrap intervals
-   with a fixed seed. Acceptance: fixed datasets have reproducible intervals and
-   incomplete or duplicated trials are rejected. Do not rank providers from the
-   current four synthetic examples.
-3. **Result provenance.** Bind exports to a suite digest and runner revision.
+2. **Result provenance.** Bind exports to a suite digest and runner revision.
    Acceptance: mismatched contracts or revisions are visibly rejected or flagged
    under a documented compatibility policy. Do not describe unsigned metadata as
    proof of execution.
-4. **Contract lint for impossible budgets.** Detect contradictions between required
+3. **Contract lint for impossible budgets.** Detect contradictions between required
    tool counts, exact sequences, and caps before a run. Acceptance: a suite
    explicitly requesting two required calls under a cap of one fails with a path
    to the contradiction; intentionally negative tests have an explicit mode.
-5. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
+4. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
    if real suite sizes justify it. Acceptance: a deterministic large fixture
    matches the current in-memory score with documented memory bounds and line
    numbers for malformed records.

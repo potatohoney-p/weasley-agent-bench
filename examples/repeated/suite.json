@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-repeated-v1",
+  "tasks": [
+    {
+      "id": "task-0",
+      "prompt": "Synthetic check 0: return true.",
+      "expect": {
+        "final": [
+          {
+            "path": "",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-1",
+      "prompt": "Synthetic check 1: return true.",
+      "expect": {
+        "final": [
+          {
+            "path": "",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-2",
+      "prompt": "Synthetic check 2: return true.",
+      "expect": {
+        "final": [
+          {
+            "path": "",
+            "equals": true
+          }
+        ]
+      }
+    }
+  ]
+}

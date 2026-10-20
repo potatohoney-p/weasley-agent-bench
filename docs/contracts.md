@@ -113,8 +113,49 @@ the associated boolean is authoritative. The summary denominator is the whole
 suite. `suite_sha256` hashes the canonical JSON suite (keys sorted, compact
 separators, non-ASCII characters escaped, UTF-8), including prompts and budgets.
 
-Comparison emits the same ordered IDs, transitions, candidate failed-check
+Single-run `compare` emits the same ordered IDs, transitions, candidate failed-check
 codes, and candidate-minus-baseline usage deltas for shared metrics. No
 averaging, confidence interval, provider ranking, or inference of causation is
 performed. Store both input run files and the exact suite with reports when
 using the outputs as evidence.
+
+## Repeated-run batches
+
+`compare-repeated` accepts the same suite plus two strict version 1 batch
+documents, one for each condition:
+
+```json
+{
+  "schema_version": 1,
+  "suite_id": "lookup-v1",
+  "batch_id": "baseline-batch",
+  "trials": [
+    {"trial_id": "trial-0", "run": {}},
+    {"trial_id": "trial-1", "run": {}}
+  ]
+}
+```
+
+Each `run` placeholder above must be replaced with a complete saved-run object
+in the format documented earlier. Batch and nested run `suite_id` values must
+match the supplied suite. Batch IDs and trial IDs are non-empty strings. Unknown
+fields, duplicate trial IDs, and duplicate run IDs within a batch are errors.
+Both batches must contain at least two trials and exactly the same trial IDs.
+Every nested run must contain exactly one result per suite task: missing,
+duplicate, or extra task IDs fail validation. Error and cancelled task results
+are present failures, not missing data. No partial trial or task intersection
+is silently selected. The same run ID on opposite sides is allowed, for example
+when comparing a batch with itself.
+
+Reports include the suite digest, batch IDs, method/options, overall pass rates,
+the paired pass-rate difference and its 95% bootstrap interval. Trial rows are
+sorted by trial ID and retain both run IDs. Task rows follow suite order and
+retain paired improvement/regression counts. These counts are out of the number
+of trial pairs, not the number of tasks. Rates and interval endpoints are finite
+fractions in `[-1, 1]` (pass rates in `[0, 1]`), not percentages.
+
+The bootstrap resamples complete paired suite trials, conditional on the fixed
+suite and independent representative trial-pair assumptions. It does not
+resample individual tasks or produce an automatic performance verdict.
+The [method and limitations](repeated-runs.md) specify the estimand, percentile
+definition, deterministic seed policy, CLI option bounds, and synthetic example.

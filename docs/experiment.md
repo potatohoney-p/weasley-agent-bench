@@ -59,5 +59,8 @@ API, paid evaluation, or production trace was used.
 - Paired gates prevent aggregate gains from hiding a specific regression.
   Unchanged failures do not count as new regressions and remain visible.
 - Standard-library-only source execution avoids runtime package/provider drift;
-  adapters and statistical repeated-run analysis are deferred until real inputs
-  establish their requirements.
+  [descriptive paired repeated-run analysis](repeated-runs.md) is implemented
+  separately for complete trials on a fixed suite. A validated real exporter,
+  bound runner/contract provenance, and independently collected trial data
+  remain future work. Synthetic fixtures verify calculations, not provider
+  performance or the interval's real-world coverage.

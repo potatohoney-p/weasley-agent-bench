@@ -3,11 +3,12 @@
 Evaluate saved agent results against explicit task contracts, without calling a
 model, executing a tool, or depending on a particular agent runtime.
 
-This private prototype separates three questions:
+This private prototype separates four questions:
 
 1. Did the final structured answer satisfy the task?
 2. Did the recorded tool sequence, outcomes, and resource usage satisfy its contract?
 3. Which individual tasks improved or regressed between two runs?
+4. How variable is a paired pass-rate change across repeated trials on a fixed suite?
 
 The library and CLI use only Python's standard library. Python 3.11+ is required.
 No accounts, API keys, database, network service, or package installation are
@@ -88,6 +89,25 @@ python -m pip install .
 Installation needs setuptools for building; the installed package has no runtime
 dependencies. Source execution is the reproducible offline path.
 
+### Paired repeated runs
+
+```bash
+python -m weasley_agent_bench compare-repeated examples/repeated/suite.json examples/repeated/baseline.json examples/repeated/candidate.json --seed 17
+```
+
+This separate, hand-authored three-task/four-trial fixture exercises paired
+analysis. Baseline and candidate pass rates are `7/12` and `8/12`; the difference
+is `1/12`, with a 95% paired-trial bootstrap interval of `[-0.25, 0.5]`. The
+report still exposes three paired regressions on one task. These synthetic
+numbers validate the method, not any provider's performance.
+
+Whole trial pairs are resampled with a fixed seed, preserving within-trial task
+correlation and baseline/candidate pairing. Missing or duplicate trials,
+unmatched trial IDs, and incomplete runs are rejected. The interval is
+conditional on the fixed suite and independent representative trial pairs;
+tasks are not independent bootstrap samples. This command is descriptive,
+not a significance or regression gate. See the [method and input format](docs/repeated-runs.md).
+
 ## Use your own runner
 
 1. Write a suite using the [version 1 contract](docs/contracts.md). Give every
@@ -120,7 +140,7 @@ assertion paths are present, so use synthetic or appropriately reviewed inputs.
 
 | Exit | Meaning |
 | --- | --- |
-| `0` | `evaluate`: every task passed. `compare`: no baseline pass became a failure. |
+| `0` | `evaluate`: every task passed. `compare`: no baseline pass became a failure. `compare-repeated`: valid descriptive analysis, even for negative changes. |
 | `1` | A task failed evaluation or a comparison found a regression. |
 | `2` | Invalid input or command usage; input errors are JSON on stderr. |
 
@@ -135,7 +155,8 @@ This checks **declared results**, not independently observed execution. A runner
 must record calls and telemetry honestly. The suite digest identifies the
 contract used to score; it is not a signature or proof of how a run was produced.
 This release has no provider execution, model judge, fuzzy language scoring,
-trace replay, live side effects, or statistical significance claims. JSON equality
+trace replay, live side effects, or statistical significance claims. Repeated-run
+intervals describe only trial variation on a fixed suite. JSON equality
 does not imply factual correctness beyond the expectations supplied.
 
 The [audit](docs/overlap-audit.md) explains why this is separate from the existing
