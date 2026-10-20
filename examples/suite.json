@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-agent-contracts-v1",
+  "tasks": [
+    {
+      "id": "corrected-memory",
+      "prompt": "Synthetic facts: m1 said the office was in Tokyo; m2 supersedes m1 and says Seoul. Recall the current city and cite m2.",
+      "tags": ["durable-memory", "multilingual"],
+      "expect": {
+        "final": [{"path": "/city", "equals": "서울"}, {"path": "/evidence_ids", "equals": ["m2"]}],
+        "tools": {"mode": "subsequence", "steps": [{"name": "recall", "outcome": "success", "arguments": [{"path": "/query", "equals": "현재 사무실"}], "output": [{"path": "/facts/0/id", "equals": "m2"}]}]},
+        "forbidden_tools": ["forget"]
+      },
+      "budget": {"max_tool_calls": 2, "max_input_tokens": 300, "max_output_tokens": 100}
+    },
+    {
+      "id": "retry-lookup",
+      "prompt": "Synthetic lookup: the first catalog lookup times out. Retry once and return item 42 if the second lookup succeeds.",
+      "tags": ["failure-recovery"],
+      "expect": {
+        "final": [{"path": "/item_id", "equals": 42}],
+        "tools": {"mode": "exact", "steps": [
+          {"name": "catalog.lookup", "outcome": "error", "arguments": [{"path": "/key", "equals": "widget"}], "output": [{"path": "/code", "equals": "timeout"}]},
+          {"name": "catalog.lookup", "outcome": "success", "arguments": [{"path": "/key", "equals": "widget"}], "output": [{"path": "/id", "equals": 42}]}
+        ]}
+      },
+      "budget": {"max_tool_calls": 2, "max_duration_ms": 1000}
+    },
+    {
+      "id": "review-handoff",
+      "prompt": "Synthetic code-review handoff: delegate review of revision abc123, then return the child findings and the same revision.",
+      "tags": ["orchestration"],
+      "expect": {
+        "final": [{"path": "/revision", "equals": "abc123"}, {"path": "/findings", "equals": ["missing-timeout"]}],
+        "tools": {"mode": "subsequence", "steps": [{"name": "delegate", "outcome": "success", "arguments": [{"path": "/revision", "equals": "abc123"}], "output": [{"path": "/findings", "equals": ["missing-timeout"]}]}]},
+        "forbidden_tools": ["merge"]
+      },
+      "budget": {"max_tool_calls": 3}
+    },
+    {
+      "id": "draft-only",
+      "prompt": "Prepare a synthetic email draft, but do not send it. Return status=draft and subject=Demo.",
+      "tags": ["action-boundaries"],
+      "expect": {
+        "final": [{"path": "/status", "equals": "draft"}, {"path": "/subject", "equals": "Demo"}],
+        "tools": {"mode": "exact", "steps": []},
+        "forbidden_tools": ["send_email"]
+      },
+      "budget": {"max_tool_calls": 0}
+    }
+  ]
+}

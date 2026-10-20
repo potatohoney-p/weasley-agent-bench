@@ -1,3 +1,143 @@
 # Weasley Agent Bench
 
-Private development repository for provider-neutral agent evaluation. The implementation will be reviewed through a Draft PR.
+Evaluate saved agent results against explicit task contracts, without calling a
+model, executing a tool, or depending on a particular agent runtime.
+
+This private prototype separates three questions:
+
+1. Did the final structured answer satisfy the task?
+2. Did the recorded tool sequence, outcomes, and resource usage satisfy its contract?
+3. Which individual tasks improved or regressed between two runs?
+
+The library and CLI use only Python's standard library. Python 3.11+ is required.
+No accounts, API keys, database, network service, or package installation are
+needed to run from source.
+
+## Reproduce the demo
+
+From the repository root:
+
+```bash
+python -m unittest discover -s tests -v
+python -m weasley_agent_bench evaluate examples/suite.json examples/candidate.json
+python -m weasley_agent_bench compare examples/suite.json examples/baseline.json examples/candidate.json
+```
+
+All data is hand-authored and synthetic. The baseline fails two of four tasks:
+it recalls a superseded fact and loses a child's review finding. The candidate
+passes all four. This proves the evaluator's behavior; it measures no real
+provider or model capability.
+
+| Task | Baseline | Candidate | Contract exercised |
+| --- | --- | --- | --- |
+| corrected-memory | Fail | Pass | Current Korean fact, evidence ID, recall result, token cap |
+| retry-lookup | Pass | Pass | Failed lookup followed by successful retry, ordered output checks |
+| review-handoff | Fail | Pass | Revision-bound delegation and retained child finding |
+| draft-only | Pass | Pass | Draft result without tool side effects |
+
+To demonstrate a failed gate, reverse the run order:
+
+```bash
+python -m weasley_agent_bench compare examples/suite.json examples/candidate.json examples/baseline.json
+```
+
+It exits **1** and identifies the two regressions. Equal aggregate pass counts do
+not hide a regression: each task is paired by ID. Missing cases cannot disappear
+from an evaluation denominator, and incomplete runs cannot be compared.
+
+Run the reproducible fault-injection experiment:
+
+```bash
+python -m experiments.fault_matrix
+```
+
+It evaluates 12 deliberate mutations and one valid control. The complete
+contract rejects all 12 faults; removing tool/budget expectations detects five.
+Both versions accept the valid control. This small, selected fault matrix
+explains what each contract adds; it is not an estimate of real-world detection
+rates. See [the experiment design](docs/experiment.md).
+
+### Memory across sessions
+
+```bash
+python -m experiments.memory_horizon --output-dir reports/memory-demo
+python -m weasley_agent_bench evaluate reports/memory-demo/suite.json reports/memory-demo/latest-record.json
+```
+
+This exports a reusable 48-question suite, six synthetic episodes, three saved
+baseline runs, and a report. Corrections, a retraction, restoration, session
+resets, Korean values, and source IDs are scored against the state at each
+question's historical cutoff. Questions and answer labels are kept out of the
+stored fact stream.
+
+The deterministic toy baselines score **19/48** with session-only state,
+**24/48** with a four-record rolling state, and **48/48** with exact-key latest
+record retrieval. These are reference implementations, not language models.
+The experiment reports storage/context size and an explicitly labeled
+character-based token proxy. Optional `--timing-trials 100` measures only local
+lookup/context-selection time. [Memory experiment design](docs/memory-horizon.md)
+explains the workload and limitations. Exports refuse to overwrite existing
+artifacts; choose a fresh output directory on a later run.
+
+Optional installation exposes the same CLI as `weasley-agent-bench`:
+
+```bash
+python -m pip install .
+```
+
+Installation needs setuptools for building; the installed package has no runtime
+dependencies. Source execution is the reproducible offline path.
+
+## Use your own runner
+
+1. Write a suite using the [version 1 contract](docs/contracts.md). Give every
+   task a stable ID, prompt, and explicit expectations.
+2. Run the task in your own harness and export its final JSON value, completed
+   tool calls, status, and any measured usage into the result format. No adapter
+   is bundled yet.
+3. Evaluate the saved result. Compare two complete result sets against the same
+   suite to gate per-task regressions.
+
+```python
+from weasley_agent_bench import evaluate, load_document
+
+report = evaluate(load_document("examples/suite.json"),
+                  load_document("examples/candidate.json"))
+assert report["passed"]
+```
+
+The evaluator treats a failed/cancelled run, missing task, failed required tool,
+unexpected exact-sequence call, forbidden tool, missing capped usage metric, or
+exceeded cap as failure. It rejects malformed input, duplicate result IDs,
+unknown tasks, ambiguous JSON keys, unsupported versions, and non-finite values.
+
+## Reports and exit codes
+
+Commands emit deterministic JSON to stdout, without timestamps. Reports include
+the suite's canonical SHA-256 digest and stable per-task/check identifiers. They
+do not reproduce full prompts, tool arguments, or tool outputs. Task IDs and
+assertion paths are present, so use synthetic or appropriately reviewed inputs.
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | `evaluate`: every task passed. `compare`: no baseline pass became a failure. |
+| `1` | A task failed evaluation or a comparison found a regression. |
+| `2` | Invalid input or command usage; input errors are JSON on stderr. |
+
+`compare` is a regression gate. Its `candidate_passed` field separately states
+whether **all** candidate tasks passed. Unchanged failures are still failures,
+even when the regression gate exits 0. Usage deltas appear only for metrics
+reported in both paired results; absent telemetry never counts as zero cost.
+
+## Limits
+
+This checks **declared results**, not independently observed execution. A runner
+must record calls and telemetry honestly. The suite digest identifies the
+contract used to score; it is not a signature or proof of how a run was produced.
+This release has no provider execution, model judge, fuzzy language scoring,
+trace replay, live side effects, or statistical significance claims. JSON equality
+does not imply factual correctness beyond the expectations supplied.
+
+The [audit](docs/overlap-audit.md) explains why this is separate from the existing
+Weasley runtimes. [ROADMAP.md](ROADMAP.md) lists acceptance criteria for the next
+increments. The project remains private; public publication requires approval.
