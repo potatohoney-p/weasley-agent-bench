@@ -49,12 +49,15 @@ def main(argv: list[str] | None = None) -> int:
     export.add_argument("metadata")
     export.add_argument("--task-id", required=True)
     export.add_argument("--run-id", required=True)
+    export.add_argument("--require-prompt-match", action="store_true",
+                        help="require exact initial transcript text to match the selected task prompt")
     args = parser.parse_args(argv)
     try:
         suite = load_document(args.suite)
         if args.command == "export-subagents":
             report = export_subagents(suite, load_subagents_transcript(args.transcript),
-                                      load_document(args.metadata), task_id=args.task_id, run_id=args.run_id)
+                                      load_document(args.metadata), task_id=args.task_id, run_id=args.run_id,
+                                      require_prompt_match=args.require_prompt_match)
             passed = True
         elif args.command == "lint-suite":
             report = lint_suite(suite, allow_contradictions=args.allow_contradictions)

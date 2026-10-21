@@ -197,6 +197,8 @@ An opt-in `export-subagents` command converts a bounded, validated subset of
 weasley-subagents version-1 foreground artifacts to a single task result.
 See [the pinned source contract, synthetic fixture and limitations](docs/subagents-export.md).
 This does not run a model or certify execution; missing telemetry stays missing.
+For exact suite/initial-prompt consistency, add `--require-prompt-match`; expanded
+prompts may intentionally differ, so this gate is explicit rather than default.
 
 ## License
 
