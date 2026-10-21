@@ -6,4 +6,4 @@
 - Missing cases must remain visible in evaluation and cannot be dropped for comparison.
 - Run `python -m unittest discover -s tests -v` and the README demo before committing.
 - Update `docs/contracts.md` for any schema or scoring behavior change.
-- Keep this repository private unless the owner specifically authorizes publication.
+- Do not add credentials, private service data, or non-consented production traces.

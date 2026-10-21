@@ -3,7 +3,7 @@
 Evaluate saved agent results against explicit task contracts, without calling a
 model, executing a tool, or depending on a particular agent runtime.
 
-This private prototype separates four questions:
+This offline prototype separates four questions:
 
 1. Did the final structured answer satisfy the task?
 2. Did the recorded tool sequence, outcomes, and resource usage satisfy its contract?
@@ -189,7 +189,7 @@ does not imply factual correctness beyond the expectations supplied.
 
 The [audit](docs/overlap-audit.md) explains why this is separate from the existing
 Weasley runtimes. [ROADMAP.md](ROADMAP.md) lists acceptance criteria for the next
-increments. The project remains private; public publication requires approval.
+increments.
 
 ### Saved foreground transcript export
 
@@ -197,3 +197,7 @@ An opt-in `export-subagents` command converts a bounded, validated subset of
 weasley-subagents version-1 foreground artifacts to a single task result.
 See [the pinned source contract, synthetic fixture and limitations](docs/subagents-export.md).
 This does not run a model or certify execution; missing telemetry stays missing.
+
+## License
+
+Licensed under the [MIT License](LICENSE).

@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Offline task-contract evaluation for provider-neutral agent results"
 requires-python = ">=3.11"
 dependencies = []
+license = {file = "LICENSE"}
 
 [project.scripts]
 weasley-agent-bench = "weasley_agent_bench.cli:main"

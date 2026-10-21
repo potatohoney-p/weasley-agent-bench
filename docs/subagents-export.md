@@ -118,3 +118,15 @@ contracts, acceptance/effects and audit information) are not imported as benchma
 facts or checked for equivalence. Task assignment is explicit at the CLI; metadata
 `task` can differ from the expanded initial prompt. Their presence does not add
 trust. Only the lifecycle and identity fields described above are validated.
+
+## Third-party provenance
+
+The optional fixture generator imports an external checkout of
+[weasley-subagents at 72901e3](https://github.com/potatohoney-p/weasley-subagents/tree/72901e3f17eea4d56418b24e7a63f10c7ae22375).
+That upstream project retains its
+[Apache-2.0 LICENSE](https://github.com/potatohoney-p/weasley-subagents/blob/72901e3f17eea4d56418b24e7a63f10c7ae22375/LICENSE)
+and [NOTICE](https://github.com/potatohoney-p/weasley-subagents/blob/72901e3f17eea4d56418b24e7a63f10c7ae22375/NOTICE).
+No upstream source is vendored here. This repository's MIT license does not
+relicense that external source; preserve its applicable notices when using or
+redistributing it. The checked-in fixture is synthetic generated output, not a
+recorded model run.
