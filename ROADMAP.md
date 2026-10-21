@@ -1,6 +1,6 @@
 # Roadmap and acceptance criteria
 
-## Implemented locally
+## Implemented capabilities
 
 - **Task-contract evaluation:** structured final values, exact/subsequence tool
   outcomes, forbidden attempts, and resource caps are scored from strict versioned
@@ -55,7 +55,7 @@ are not additional work units.
 
 ## Publication status
 
-Private publication is intended, with a minimal README base and implementation
-reviewed through a Draft PR. The coordinator clarified that minimal bootstrap of
-this newly authorized private repository is allowed; existing repositories'
-default branches remain protected. No public publication is authorized.
+The implementation was merged through [PR #1](https://github.com/potatohoney-p/weasley-agent-bench/pull/1)
+and the repository was made public on 2026-10-21 under the [MIT License](LICENSE).
+The capabilities above are available on the default branch. Included examples
+remain synthetic; publication does not establish real-model performance.
