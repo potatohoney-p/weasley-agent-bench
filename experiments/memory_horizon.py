@@ -212,7 +212,10 @@ def export(
         raise FileExistsError("export would overwrite an existing artifact; choose a fresh directory")
     directory.mkdir(parents=True, exist_ok=True)
     for name, value in files.items():
-        (directory / name).write_text(json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        payload = json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n"
+        # Preflight can race another exporter; never truncate a file that won.
+        with (directory / name).open("x", encoding="utf-8") as stream:
+            stream.write(payload)
 
 
 def main(argv=None):

@@ -58,6 +58,15 @@ runner must consume episodes in order and answer each session's questions
 before receiving future events. Keep the suite's `expect` values away from the
 runner. Store the suite digest with experiment results.
 
+Export refuses to overwrite any target artifact. It checks the whole set before
+writing, then creates each file exclusively so a competing writer that appears
+after that check is also preserved. This applies to optional provenance sidecars.
+An existing empty directory is allowed. A collision or other I/O failure stops
+the export; the CLI exits 2 without a success report. Earlier files may remain:
+this is not an atomic bundle transaction or a lock against later external edits.
+Do not treat a failed export's partial directory as complete evidence; retain
+the original artifacts and retry in a fresh directory.
+
 ## Optional measured timing
 
 ```bash

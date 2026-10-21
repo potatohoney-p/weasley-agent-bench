@@ -110,8 +110,11 @@ report output. Exports refuse to overwrite any target artifact, including a
 sidecar. The Python `export` function accepts the same optional keyword
 `runner_revision`; sidecar exports reject colliding generated filenames before
 writing anything, including a run name that would occupy another run's sidecar
-path. Exports are not atomic across files: an I/O error can leave partial
-artifacts, so discard an incomplete bundle and retry in a fresh directory.
+path. Each artifact is created exclusively: a file that appears after the initial
+collision check is preserved and causes the export to fail. This also applies
+when exporting without sidecars. Exports are not atomic across files: a late
+collision or another I/O error can leave partial artifacts, so do not use an
+incomplete bundle as evidence; retain the originals and retry in a fresh directory.
 No provider call, paid service, or network access is used.
 
 ## Trust boundary
