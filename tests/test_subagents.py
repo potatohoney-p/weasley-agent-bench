@@ -100,7 +100,7 @@ class SubagentsTests(unittest.TestCase):
         for text in ['{"secret":"PRIVATE-SENTINEL",}\n', '{}', '\n', '{"version":1,"version":2}\n']:
             with tempfile.TemporaryDirectory() as directory:
                 path = Path(directory) / "transcript"
-                path.write_text(text)
+                path.write_text(text, encoding="utf-8", newline="\n")
                 with self.assertRaises(ContractError) as caught:
                     load_subagents_transcript(path)
                 self.assertNotIn("PRIVATE-SENTINEL", str(caught.exception))
@@ -159,7 +159,7 @@ class SubagentsTests(unittest.TestCase):
                 records[-1]["text"] = "before" + char + "after"
                 records[-1]["message"]["content"] = [{"type":"text","text":records[-1]["text"]}]
                 path = Path(directory) / "transcript"
-                path.write_text("".join(json.dumps(r,ensure_ascii=False) + "\n" for r in records))
+                path.write_text("".join(json.dumps(r,ensure_ascii=False) + "\n" for r in records), encoding="utf-8", newline="\n")
                 self.assertEqual(load_subagents_transcript(path),records)
 
     def test_overflow_numeric_arguments_are_content_safe_contract_error(self):
@@ -168,7 +168,7 @@ class SubagentsTests(unittest.TestCase):
         self.assertNotIn("PRIVATE-SENTINEL",str(caught.exception))
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "transcript"
-            path.write_text("".join(json.dumps(r) + "\n" for r in self.records))
+            path.write_text("".join(json.dumps(r) + "\n" for r in self.records), encoding="utf-8", newline="\n")
             result = subprocess.run([sys.executable,"-m","weasley_agent_bench","export-subagents",
                 str(FIXTURE/"suite.json"),str(path),str(FIXTURE/"synthetic.metadata.json"),
                 "--task-id","read-note","--run-id","synthetic-export"],cwd=ROOT,capture_output=True,text=True)
