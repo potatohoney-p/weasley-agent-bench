@@ -32,9 +32,14 @@ def load_subagents_transcript(path: str) -> list[dict]:
     try:
         with Path(path).open("rb") as stream:
             raw = stream.read(MAX_TRANSCRIPT_BYTES + 1)
-        _require(len(raw) <= MAX_TRANSCRIPT_BYTES, "transcript exceeds size limit")
+    except (OSError, UnicodeError, ValueError):
+        # Invalid filesystem paths (including NUL) are input failures, not
+        # tracebacks. Do not expose the path or underlying exception text.
+        raise ContractError("subagents: cannot read UTF-8 transcript") from None
+    _require(len(raw) <= MAX_TRANSCRIPT_BYTES, "transcript exceeds size limit")
+    try:
         text = raw.decode("utf-8")
-    except (OSError, UnicodeError):
+    except UnicodeError:
         raise ContractError("subagents: cannot read UTF-8 transcript") from None
     _require(bool(text) and text.endswith("\n"), "incomplete JSONL framing")
     return [_json(line) for line in text[:-1].split("\n")]

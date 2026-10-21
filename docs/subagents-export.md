@@ -130,3 +130,15 @@ No upstream source is vendored here. This repository's MIT license does not
 relicense that external source; preserve its applicable notices when using or
 redistributing it. The checked-in fixture is synthetic generated output, not a
 recorded model run.
+
+## Input error boundary
+
+The file loader reads at most 50 MiB plus one byte and rejects over-limit input
+before decoding. The limit is bytes, not Unicode characters. Invalid filesystem
+paths, read errors, and invalid UTF-8 become content-safe `ContractError`s; the
+CLI returns exit 2 with a JSON error and no exported output. The path and
+underlying exception text are not included. Malformed JSON/framing and size
+limit failures retain their separate diagnostics. Embedded NUL is only possible
+through Python `main(argv)`/loader calls, not ordinary OS command-line arguments.
+This boundary is not a filesystem sandbox or a guarantee against blocking reads
+from special files. The caller must choose an appropriate saved transcript file.
