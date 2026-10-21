@@ -125,8 +125,8 @@ accepting the fixture. Existing scoring and rescoring are unchanged.
 1. Write a suite using the [version 1 contract](docs/contracts.md). Give every
    task a stable ID, prompt, and explicit expectations.
 2. Run the task in your own harness and export its final JSON value, completed
-   tool calls, status, and any measured usage into the result format. No adapter
-   is bundled yet.
+   tool calls, status, and any measured usage into the result format. A bounded saved-text adapter is available for
+   weasley-subagents foreground transcripts; see [its contract](docs/subagents-export.md).
 3. Evaluate the saved result. Compare two complete result sets against the same
    suite to gate per-task regressions.
 
@@ -190,3 +190,10 @@ does not imply factual correctness beyond the expectations supplied.
 The [audit](docs/overlap-audit.md) explains why this is separate from the existing
 Weasley runtimes. [ROADMAP.md](ROADMAP.md) lists acceptance criteria for the next
 increments. The project remains private; public publication requires approval.
+
+### Saved foreground transcript export
+
+An opt-in `export-subagents` command converts a bounded, validated subset of
+weasley-subagents version-1 foreground artifacts to a single task result.
+See [the pinned source contract, synthetic fixture and limitations](docs/subagents-export.md).
+This does not run a model or certify execution; missing telemetry stays missing.

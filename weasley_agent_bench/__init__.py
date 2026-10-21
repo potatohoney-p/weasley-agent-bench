@@ -5,8 +5,9 @@ from .scoring import compare, evaluate
 from .repeated import compare_repeated
 from .provenance import create_provenance, verify_provenance
 from .linting import lint_suite
+from .subagents import export_subagents, load_subagents_transcript
 
 __all__ = [
     "ContractError", "compare", "compare_repeated", "evaluate", "load_document", "validate_run",
-    "validate_suite", "create_provenance", "verify_provenance", "lint_suite",
+    "validate_suite", "create_provenance", "verify_provenance", "lint_suite", "export_subagents", "load_subagents_transcript",
 ]

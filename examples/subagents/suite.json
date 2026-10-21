@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-subagents-text-v1",
+  "tasks": [{
+    "id": "read-note",
+    "prompt": "Read the synthetic note and report its contents.",
+    "expect": {
+      "final": [{"path": "", "equals": "synthetic\nnote"}],
+      "tools": {"mode": "exact", "steps": [{"name": "read", "outcome": "success", "arguments": [{"path": "/path", "equals": "synthetic-note.txt"}], "output": [{"path": "", "equals": "synthetic note"}]}]}
+    },
+    "budget": {"max_tool_calls": 1}
+  }]
+}

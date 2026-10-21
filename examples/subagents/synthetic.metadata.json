@@ -1,0 +1,9 @@
+{
+  "runId": "synthetic-source-run",
+  "agent": "synthetic-reader",
+  "exitCode": 0,
+  "toolCount": 1,
+  "modelAttempts": [{"model": "synthetic-no-provider", "success": true, "exitCode": 0}],
+  "durationMs": 0,
+  "usage": {"input": 0, "output": 0}
+}

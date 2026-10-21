@@ -41,10 +41,13 @@ are not additional work units.
 
 ## Next, in priority order
 
-1. **One real exporter with fixture parity.** Add an opt-in Assistant JSONL export
-   adapter after validating stable trace fields. Acceptance: a sanitized frozen
-   trace and a hand-written equivalent run produce identical evaluation reports;
-   missing tool results fail export. No live API call is required.
+1. **Recorded real-run validation of the exporter.** The opt-in weasley-subagents
+   foreground adapter now has a pinned source contract and a synthetic fixture
+   generated through its actual writer. Its handwritten equivalent run produces
+   identical evaluation reports; missing results fail export. This is format
+   parity, not a recorded real run. Remaining acceptance: a consented sanitized
+   real-run artifact must validate without guessing omitted fields. No live
+   provider execution or private session ingestion is enabled by this adapter.
 2. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
    if real suite sizes justify it. Acceptance: a deterministic large fixture
    matches the current in-memory score with documented memory bounds and line

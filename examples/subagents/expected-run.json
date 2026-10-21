@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-subagents-text-v1",
+  "run_id": "synthetic-export",
+  "results": [{"task_id": "read-note", "status": "completed", "final": "synthetic\nnote", "tool_calls": [{"name": "read", "arguments": {"path": "synthetic-note.txt"}, "outcome": "success", "output": "synthetic note"}]}]
+}

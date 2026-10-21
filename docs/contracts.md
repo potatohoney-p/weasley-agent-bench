@@ -178,3 +178,11 @@ suite and independent representative trial-pair assumptions. It does not
 resample individual tasks or produce an automatic performance verdict.
 The [method and limitations](repeated-runs.md) specify the estimand, percentile
 definition, deterministic seed policy, CLI option bounds, and synthetic example.
+
+## Optional saved-harness adapter
+
+`export-subagents` is separate from scoring and accepts only the explicitly
+supported foreground artifact subset documented in [subagents-export.md](subagents-export.md).
+It preserves saved text rather than parsing JSON-looking output, rejects
+incomplete recorded tool lifecycles, and omits uncertain usage. The output is an
+ordinary version-1 run, so all existing validation and missing-task rules apply.

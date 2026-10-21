@@ -11,6 +11,7 @@ from .scoring import compare, evaluate
 from .repeated import compare_repeated
 from .provenance import create_provenance, verify_provenance
 from .linting import lint_suite
+from .subagents import export_subagents, load_subagents_transcript
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -42,10 +43,20 @@ def main(argv: list[str] | None = None) -> int:
     verify.add_argument("run")
     verify.add_argument("provenance")
     verify.add_argument("--expected-runner-revision", help="optionally require this exact declared revision")
+    export = sub.add_parser("export-subagents", help="convert a supported saved foreground text projection")
+    export.add_argument("suite")
+    export.add_argument("transcript")
+    export.add_argument("metadata")
+    export.add_argument("--task-id", required=True)
+    export.add_argument("--run-id", required=True)
     args = parser.parse_args(argv)
     try:
         suite = load_document(args.suite)
-        if args.command == "lint-suite":
+        if args.command == "export-subagents":
+            report = export_subagents(suite, load_subagents_transcript(args.transcript),
+                                      load_document(args.metadata), task_id=args.task_id, run_id=args.run_id)
+            passed = True
+        elif args.command == "lint-suite":
             report = lint_suite(suite, allow_contradictions=args.allow_contradictions)
             passed = report["accepted"]
         elif args.command == "evaluate":
