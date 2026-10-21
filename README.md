@@ -110,6 +110,18 @@ not a significance or regression gate. See the [method and input format](docs/re
 
 ## Use your own runner
 
+Before spending a run, optionally check for impossible required-call budgets:
+
+```bash
+python -m weasley_agent_bench lint-suite examples/suite.json
+```
+
+The separate [static lint](docs/contract-lint.md) reports when required tool
+steps exceed the call cap, with paths to both sides. It is not a general
+satisfiability solver. Intentional negative fixtures can use the explicit
+`--allow-contradictions` mode, which retains findings and `passed: false` while
+accepting the fixture. Existing scoring and rescoring are unchanged.
+
 1. Write a suite using the [version 1 contract](docs/contracts.md). Give every
    task a stable ID, prompt, and explicit expectations.
 2. Run the task in your own harness and export its final JSON value, completed
@@ -155,6 +167,10 @@ assertion paths are present, so use synthetic or appropriately reviewed inputs.
 `create-provenance` and `verify-provenance` exit 0 on successful creation or
 consistency verification, and 2 on invalid input or a mismatch. Verification
 does not grade task success; a consistent failed run still needs evaluation.
+
+`lint-suite` exits 0 for a clean or explicitly allowed report, 1 for an unallowed
+static contradiction, and 2 for invalid input. Check `passed`, not just the exit
+code, when using `--allow-contradictions`; `accepted` reflects that explicit policy.
 
 `compare` is a regression gate. Its `candidate_passed` field separately states
 whether **all** candidate tasks passed. Unchanged failures are still failures,

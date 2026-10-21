@@ -10,11 +10,16 @@ from .contracts import ContractError, load_document
 from .scoring import compare, evaluate
 from .repeated import compare_repeated
 from .provenance import create_provenance, verify_provenance
+from .linting import lint_suite
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
+    lint = sub.add_parser("lint-suite", help="check static required-call budget contradictions")
+    lint.add_argument("suite")
+    lint.add_argument("--allow-contradictions", action="store_true",
+                      help="accept intentional negative fixtures without hiding lint findings")
     score = sub.add_parser("evaluate", help="score one saved run against a task suite")
     score.add_argument("suite")
     score.add_argument("run")
@@ -40,7 +45,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         suite = load_document(args.suite)
-        if args.command == "evaluate":
+        if args.command == "lint-suite":
+            report = lint_suite(suite, allow_contradictions=args.allow_contradictions)
+            passed = report["accepted"]
+        elif args.command == "evaluate":
             report = evaluate(suite, load_document(args.run))
             passed = report["passed"]
         elif args.command == "compare":

@@ -29,7 +29,14 @@
   rescoring remain unchanged. Hashes establish consistency, not authenticity
   or proof of actual execution.
 
-Tests, examples, documentation, and packaging support those five outcomes. They
+- **Static tool-budget lint:** a separate opt-in gate detects required call
+  counts exceeding inclusive caps for exact and subsequence contracts.
+  Acceptance: structured paths identify both sides, intentional negative
+  fixtures require explicit allowance without hiding findings, malformed
+  schemas still fail, and legacy scoring outputs remain unchanged. This is
+  not a general satisfiability or resource-cost model.
+
+Tests, examples, documentation, and packaging support those six outcomes. They
 are not additional work units.
 
 ## Next, in priority order
@@ -38,11 +45,7 @@ are not additional work units.
    adapter after validating stable trace fields. Acceptance: a sanitized frozen
    trace and a hand-written equivalent run produce identical evaluation reports;
    missing tool results fail export. No live API call is required.
-2. **Contract lint for impossible budgets.** Detect contradictions between required
-   tool counts, exact sequences, and caps before a run. Acceptance: a suite
-   explicitly requesting two required calls under a cap of one fails with a path
-   to the contradiction; intentionally negative tests have an explicit mode.
-3. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
+2. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
    if real suite sizes justify it. Acceptance: a deterministic large fixture
    matches the current in-memory score with documented memory bounds and line
    numbers for malformed records.

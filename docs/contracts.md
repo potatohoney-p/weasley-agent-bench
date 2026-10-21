@@ -70,6 +70,15 @@ Array order matters. Booleans and numbers differ (`true` is not `1`); JSON
 numbers compare numerically (`1` equals `1.0`). Strings compare exactly, with no
 case folding or Unicode normalization. Duplicate assertion paths are rejected.
 
+### Optional pre-run lint
+
+Schema validity does not guarantee satisfiability. The opt-in `lint-suite`
+command detects required tool-step counts exceeding `max_tool_calls`, without
+changing this schema or scoring. Exact and subsequence steps both require
+distinct calls, including repeated names and error outcomes. Intentional
+negative fixtures use `--allow-contradictions`; findings remain visible and
+malformed inputs still fail. See [the detection and policy boundary](contract-lint.md).
+
 ## Saved run
 
 ```json
