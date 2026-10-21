@@ -186,3 +186,8 @@ supported foreground artifact subset documented in [subagents-export.md](subagen
 It preserves saved text rather than parsing JSON-looking output, rejects
 incomplete recorded tool lifecycles, and omits uncertain usage. The output is an
 ordinary version-1 run, so all existing validation and missing-task rules apply.
+
+The saved-transcript loader maps invalid filesystem paths, read failures and
+UTF-8 failures to content-safe input errors (CLI exit 2), while preserving size
+and framing diagnostics. Its bounded read is not a filesystem sandbox or a
+special-file timeout guarantee; see [input boundaries](subagents-export.md#input-error-boundary).
