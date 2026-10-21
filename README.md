@@ -198,6 +198,10 @@ weasley-subagents version-1 foreground artifacts to a single task result.
 See [the pinned source contract, synthetic fixture and limitations](docs/subagents-export.md).
 This does not run a model or certify execution; missing telemetry stays missing.
 
+The [synthetic subprocess integration](docs/subagents-export.md#synthetic-subprocess-integration)
+exercises pinned foreground artifact persistence separately from ordinary Python
+tests. It is not a real model run or provider benchmark.
+
 ## License
 
 Licensed under the [MIT License](LICENSE).

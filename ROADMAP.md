@@ -45,7 +45,11 @@ are not additional work units.
    foreground adapter now has a pinned source contract and a synthetic fixture
    generated through its actual writer. Its handwritten equivalent run produces
    identical evaluation reports; missing results fail export. This is format
-   parity, not a recorded real run. Remaining acceptance: a consented sanitized
+   parity, not a recorded real run. An additional pinned synthetic subprocess
+   integration now exercises actual `runSync`, transcript/metadata persistence,
+   export/CLI parity and failure rejection without a model or provider. This
+   removes handwritten metadata from that integration test, not its synthetic
+   nature. Remaining acceptance: a consented sanitized
    real-run artifact must validate without guessing omitted fields. No live
    provider execution or private session ingestion is enabled by this adapter.
 2. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
