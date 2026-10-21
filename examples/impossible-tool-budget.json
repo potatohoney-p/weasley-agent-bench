@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "suite_id": "intentional-negative-tool-budget",
+  "tasks": [{
+    "id": "retry-under-one-call-cap",
+    "prompt": "Synthetic negative fixture: require two calls under a cap of one.",
+    "expect": {"tools": {"mode": "exact", "steps": [
+      {"name": "lookup", "outcome": "error"},
+      {"name": "lookup", "outcome": "success"}
+    ]}},
+    "budget": {"max_tool_calls": 1}
+  }]
+}

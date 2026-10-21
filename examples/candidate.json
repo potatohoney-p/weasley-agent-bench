@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-agent-contracts-v1",
+  "run_id": "synthetic-candidate",
+  "results": [
+    {"task_id": "corrected-memory", "status": "completed", "final": {"city": "서울", "evidence_ids": ["m2"]}, "tool_calls": [{"name": "recall", "arguments": {"query": "현재 사무실"}, "outcome": "success", "output": {"facts": [{"id": "m2", "city": "서울"}]}}], "usage": {"input_tokens": 210, "output_tokens": 40, "duration_ms": 150}},
+    {"task_id": "retry-lookup", "status": "completed", "final": {"item_id": 42}, "tool_calls": [{"name": "catalog.lookup", "arguments": {"key": "widget"}, "outcome": "error", "output": {"code": "timeout"}}, {"name": "catalog.lookup", "arguments": {"key": "widget"}, "outcome": "success", "output": {"id": 42}}], "usage": {"input_tokens": 170, "output_tokens": 25, "duration_ms": 500}},
+    {"task_id": "review-handoff", "status": "completed", "final": {"revision": "abc123", "findings": ["missing-timeout"]}, "tool_calls": [{"name": "delegate", "arguments": {"revision": "abc123"}, "outcome": "success", "output": {"findings": ["missing-timeout"]}}], "usage": {"input_tokens": 240, "output_tokens": 65, "duration_ms": 220}},
+    {"task_id": "draft-only", "status": "completed", "final": {"status": "draft", "subject": "Demo"}, "tool_calls": [], "usage": {"input_tokens": 50, "output_tokens": 20, "duration_ms": 80}}
+  ]
+}

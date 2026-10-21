@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weasley-agent-bench"
+version = "0.1.0"
+description = "Offline task-contract evaluation for provider-neutral agent results"
+requires-python = ">=3.11"
+dependencies = []
+license = {file = "LICENSE"}
+
+[project.scripts]
+weasley-agent-bench = "weasley_agent_bench.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["weasley_agent_bench*"]

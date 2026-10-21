@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-agent-contracts-v1",
+  "run_id": "synthetic-baseline",
+  "results": [
+    {"task_id": "corrected-memory", "status": "completed", "final": {"city": "Tokyo", "evidence_ids": ["m1"]}, "tool_calls": [{"name": "recall", "arguments": {"query": "現在のオフィス"}, "outcome": "success", "output": {"facts": [{"id": "m1", "city": "Tokyo"}]}}], "usage": {"input_tokens": 260, "output_tokens": 55, "duration_ms": 180}},
+    {"task_id": "retry-lookup", "status": "completed", "final": {"item_id": 42}, "tool_calls": [{"name": "catalog.lookup", "arguments": {"key": "widget"}, "outcome": "error", "output": {"code": "timeout"}}, {"name": "catalog.lookup", "arguments": {"key": "widget"}, "outcome": "success", "output": {"id": 42}}], "usage": {"input_tokens": 170, "output_tokens": 25, "duration_ms": 500}},
+    {"task_id": "review-handoff", "status": "completed", "final": {"revision": "abc123", "findings": []}, "tool_calls": [{"name": "delegate", "arguments": {"revision": "abc123"}, "outcome": "success", "output": {"findings": ["missing-timeout"]}}], "usage": {"input_tokens": 200, "output_tokens": 20, "duration_ms": 170}},
+    {"task_id": "draft-only", "status": "completed", "final": {"status": "draft", "subject": "Demo"}, "tool_calls": [], "usage": {"input_tokens": 50, "output_tokens": 20, "duration_ms": 80}}
+  ]
+}
