@@ -186,3 +186,7 @@ supported foreground artifact subset documented in [subagents-export.md](subagen
 It preserves saved text rather than parsing JSON-looking output, rejects
 incomplete recorded tool lifecycles, and omits uncertain usage. The output is an
 ordinary version-1 run, so all existing validation and missing-task rules apply.
+
+The optional [synthetic subprocess integration](subagents-export.md#synthetic-subprocess-integration)
+checks these existing adapter rules against artifacts persisted by pinned
+`runSync`. It does not change the contract or certify model execution.

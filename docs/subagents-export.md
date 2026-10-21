@@ -102,6 +102,44 @@ unsupported final content and completion reordering are tested separately.
 A genuinely recorded, consented, sanitized real-run validation remains future
 work; this fixture establishes format parity only.
 
+## Synthetic subprocess integration
+
+A second opt-in test now drives the pinned upstream `runSync` entry point. A
+small **synthetic replacement child**, not Pi or an LLM, runs as a real local
+subprocess and reads a newly created synthetic note from a temporary workspace.
+The harness itself parses its stdout and writes both transcript and metadata;
+the test does not handwrite either artifact. The exporter and CLI then consume
+those generated artifacts and compare against an independently specified result.
+
+On POSIX with Node 24, Python 3.11+, and a clean upstream checkout at the exact
+revision above, install that checkout's locked dependencies (`npm ci
+--ignore-scripts --no-audit --no-fund`), then run:
+
+```sh
+WEASLEY_SUBAGENTS_TEST_SOURCE=/absolute/path/to/pinned/weasley-subagents \
+  python -m unittest discover -s tests -p test_subagents_runtime.py -v
+```
+
+The dedicated Ubuntu CI job performs this test separately from the normal
+Python-only tests. Dependency installation needs network access, but the test
+uses no provider, credentials, model or private sessions. It isolates HOME and
+agent settings, clears inherited environment variables except OS process-launch
+paths, and points the runtime only at the generated child. This is test isolation,
+not a security sandbox for arbitrary upstream code or dependencies. The checkout
+and its dependencies must be trusted. The source pin/clean-source checks prevent
+silently testing a modified runtime; they do not authenticate the dependency
+installation. The existing Apache-2.0 provenance and NOTICE obligations apply.
+
+Five assertion groups cover generated metadata/CLI parity, repeatable benchmark
+projection despite varying raw timestamps/paths, a real child exit code 7, a
+missing tool-result event despite exit code 0, and a mismatched generated run ID.
+Unknown usage remains omitted, even though upstream metadata normalizes it to
+zeros. Temporary raw artifacts are deleted after each capture, not committed.
+The synthetic child emits a fixed protocol and performs a controlled file read;
+this validates integration with the harness's persistence path, **not** real Pi
+tool execution, provider behavior, untrusted-process containment, or real model
+performance. Recorded, consented real-model validation remains future work.
+
 ### Deliberately distinct from runtime finalOutput
 
 The final field here represents the terminal transcript message's joined text,
