@@ -21,7 +21,8 @@ expanding this supported subset.
 ## Mapping and completeness boundary
 
 The caller explicitly supplies the benchmark task ID and run ID. The adapter
-validates the task exists but does not claim that prompt equivalence was checked.
+validates the task exists. By default it does not check prompt equivalence;
+use `--require-prompt-match` to require exact initial saved prompt equality.
 Other suite tasks remain missing under the existing evaluator semantics.
 
 - Every record must have version 1, source `foreground`, the same runId/agent as
@@ -117,7 +118,31 @@ Additional metadata fields (task, usage, duration, transcriptPath, timestamps,
 contracts, acceptance/effects and audit information) are not imported as benchmark
 facts or checked for equivalence. Task assignment is explicit at the CLI; metadata
 `task` can differ from the expanded initial prompt. Their presence does not add
-trust. Only the lifecycle and identity fields described above are validated.
+trust. These fields remain outside validation, including in exact prompt mode.
+
+## Optional exact prompt binding
+
+Use `export-subagents ... --require-prompt-match` (Python API:
+`require_prompt_match=True`) when the suite prompt is the exact text sent to the
+child. After validating the initial message/text consistency, the adapter
+compares its joined text blocks to the **selected** suite task's `prompt`.
+A mismatch fails with exit 2 and no exported run. Diagnostics do not echo either
+prompt. Missing/invalid task IDs and non-boolean Python option values also fail.
+Matching exports retain the ordinary version-1 run shape and identical scores.
+
+Equality is literal: no trimming, newline conversion, case folding, Unicode
+normalization or semantic similarity is applied. Multi-block text uses the
+existing newline-join projection. The mode does not compare metadata `task`,
+which can be an unexpanded instruction; that field cannot override a mismatched
+saved initial prompt. It also does not bind system prompts, project context,
+tools, model configuration, or hidden input. A forged matching trace can pass.
+
+For a harness that expands the initial prompt, either construct the suite with
+that exact saved prompt or retain the documented default unbound mode. The
+adapter never silently falls back from requested exact matching. This gate is
+not a signature or proof of execution. The exported run does not carry evidence
+that the option was used: retain the invocation/validation log separately when
+that matters for an audit; an ordinary provenance hash alone does not prove it.
 
 ## Third-party provenance
 

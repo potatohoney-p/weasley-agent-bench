@@ -186,3 +186,9 @@ supported foreground artifact subset documented in [subagents-export.md](subagen
 It preserves saved text rather than parsing JSON-looking output, rejects
 incomplete recorded tool lifecycles, and omits uncertain usage. The output is an
 ordinary version-1 run, so all existing validation and missing-task rules apply.
+
+`export-subagents --require-prompt-match` optionally rejects an initial saved
+prompt that is not exactly the selected task's prompt. It preserves the run
+schema and legacy unbound default. It checks only saved initial text, not
+metadata task expansion, hidden context, authenticity or execution. See the
+[exact binding boundary](subagents-export.md#optional-exact-prompt-binding).
