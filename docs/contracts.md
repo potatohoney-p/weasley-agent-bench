@@ -217,3 +217,14 @@ The entire sidecar has a separate byte bound; no manifest paths or URLs are
 supported. Success emits the legacy verification JSON object, after all checks;
 errors emit no report. Valid incomplete runs may be consistent but do not gain
 coverage or successful scores. See [verification boundaries](jsonl-provenance.md).
+
+`compare-repeated-jsonl` accepts the same suite transport and separate strict
+`batch-jsonl` version-1 streams. Contiguous trial blocks contain run metadata,
+individual v1 result records and an exact trial-end count; a final batch-end count
+is required. Both sides need at least two complete trials and exactly matching
+trial IDs. Result IDs, trial IDs and per-batch run IDs cannot be duplicated.
+Analysis retains the legacy whole-trial bootstrap, Python trial order, suite
+digest, missing-coverage rejection and conditional statistical interpretation.
+All analysis completes before output, followed by trial/task events and a required
+terminal summary/interval. Exit 0 means valid descriptive analysis. See
+[the complete batch and output contract](jsonl-repeated.md).

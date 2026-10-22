@@ -129,6 +129,17 @@ conditional on the fixed suite and independent representative trial pairs;
 tasks are not independent bootstrap samples. This command is descriptive,
 not a significance or regression gate. See the [method and input format](docs/repeated-runs.md).
 
+For bounded saved batches, the equivalent opt-in JSONL analysis keeps individual
+result records bounded and uses temporary disk indexes:
+
+```bash
+python -m weasley_agent_bench compare-repeated-jsonl examples/repeated/jsonl/suite.jsonl examples/repeated/jsonl/baseline.jsonl examples/repeated/jsonl/candidate.jsonl --seed 17
+```
+
+Whole trial pairs remain the resampling unit. Duplicate/missing observations
+fail; distinct IDs do not prove independent repetitions. Require the terminal
+completion event. See [batch framing, statistics and resource bounds](docs/jsonl-repeated.md).
+
 ## Use your own runner
 
 Before spending a run, optionally check for impossible required-call budgets:
