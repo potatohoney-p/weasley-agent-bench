@@ -5,6 +5,11 @@ It does not execute a runner or rank providers. The bundled three-task,
 four-trial fixture is hand-authored and synthetic, not an experiment with a
 model. It exists to check the calculation and its failure modes.
 
+The separate [`compare-repeated-jsonl`](jsonl-repeated.md) command accepts bounded
+suite/batch records and emits equivalent trial/task rows plus a required terminal
+summary. It uses the same statistics and assumptions, with disk-backed identities
+and observations. The legacy JSON format and report remain unchanged.
+
 ```bash
 python -m weasley_agent_bench compare-repeated examples/repeated/suite.json examples/repeated/baseline.json examples/repeated/candidate.json --seed 17
 ```
@@ -79,8 +84,9 @@ Global random state and input documents are not changed.
   not establish zero real uncertainty or that a candidate will always pass.
 - All results are **rescored** under the supplied suite. Matching `suite_id`
   values and the report's suite digest do not prove which contract the original
-  runner executed. Historical contract binding and runner provenance remain a
-  separate roadmap item.
+  runner executed. Optional single-run sidecars can check artifact consistency;
+  [provenance verification](provenance.md) remains separate from this analysis
+  and does not authenticate execution.
 - Saved outcomes are trusted declarations. No model calls, measured provider
   performance, causality claims, or real user/company data are involved.
 

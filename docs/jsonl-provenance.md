@@ -114,8 +114,10 @@ assert report["consistent"]
 Legacy `verify-provenance` continues accepting whole JSON documents. Evaluation
 and comparison still permit intentional rescoring and do not automatically
 verify sidecars. Before paired JSONL comparison, verify each run separately
-against the same intended suite and its own retained sidecar. Repeated-run
-JSONL analysis and independent execution attestation remain outside this feature.
+against the same intended suite and its own retained sidecar.
+[Repeated-run JSONL analysis](jsonl-repeated.md) uses separate batch framing and
+does not implicitly verify sidecars. Independent execution attestation remains
+outside these features.
 
 ## Reproducible synthetic resource observations
 

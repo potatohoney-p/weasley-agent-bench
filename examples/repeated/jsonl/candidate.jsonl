@@ -1,0 +1,22 @@
+{"batch_id": "synthetic-candidate", "format": "weasley-agent-bench/batch-jsonl", "format_version": 1, "schema_version": 1, "suite_id": "synthetic-repeated-v1"}
+{"run": {"run_id": "candidate-0", "schema_version": 1, "suite_id": "synthetic-repeated-v1"}, "trial_id": "trial-0"}
+{"final": true, "status": "completed", "task_id": "task-0", "tool_calls": []}
+{"final": false, "status": "completed", "task_id": "task-1", "tool_calls": []}
+{"final": true, "status": "completed", "task_id": "task-2", "tool_calls": []}
+{"count": 3, "end_trial": true}
+{"run": {"run_id": "candidate-1", "schema_version": 1, "suite_id": "synthetic-repeated-v1"}, "trial_id": "trial-1"}
+{"final": true, "status": "completed", "task_id": "task-0", "tool_calls": []}
+{"final": true, "status": "completed", "task_id": "task-1", "tool_calls": []}
+{"final": true, "status": "completed", "task_id": "task-2", "tool_calls": []}
+{"count": 3, "end_trial": true}
+{"run": {"run_id": "candidate-2", "schema_version": 1, "suite_id": "synthetic-repeated-v1"}, "trial_id": "trial-2"}
+{"final": false, "status": "completed", "task_id": "task-0", "tool_calls": []}
+{"final": false, "status": "completed", "task_id": "task-1", "tool_calls": []}
+{"final": true, "status": "completed", "task_id": "task-2", "tool_calls": []}
+{"count": 3, "end_trial": true}
+{"run": {"run_id": "candidate-3", "schema_version": 1, "suite_id": "synthetic-repeated-v1"}, "trial_id": "trial-3"}
+{"final": true, "status": "completed", "task_id": "task-0", "tool_calls": []}
+{"final": false, "status": "completed", "task_id": "task-1", "tool_calls": []}
+{"final": true, "status": "completed", "task_id": "task-2", "tool_calls": []}
+{"count": 3, "end_trial": true}
+{"count": 4, "end": true}

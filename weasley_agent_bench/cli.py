@@ -13,6 +13,7 @@ from .jsonl import (
     compare_jsonl, evaluate_jsonl, verify_provenance_jsonl,
 )
 from .repeated import compare_repeated
+from .repeated_jsonl import compare_repeated_jsonl
 from .provenance import create_provenance, verify_provenance
 from .linting import lint_suite
 from .subagents import export_subagents, load_subagents_transcript
@@ -49,6 +50,14 @@ def main(argv: list[str] | None = None) -> int:
     repeated.add_argument("candidate")
     repeated.add_argument("--seed", type=int, default=0)
     repeated.add_argument("--resamples", type=int, default=10000)
+    repeated_stream = sub.add_parser("compare-repeated-jsonl", help="analyze paired whole-suite JSONL trials using temporary disk")
+    repeated_stream.add_argument("suite")
+    repeated_stream.add_argument("baseline")
+    repeated_stream.add_argument("candidate")
+    repeated_stream.add_argument("--seed", type=int, default=0)
+    repeated_stream.add_argument("--resamples", type=int, default=10000)
+    repeated_stream.add_argument("--max-record-bytes", type=int, default=DEFAULT_MAX_RECORD_BYTES)
+    repeated_stream.add_argument("--temporary-directory", help="parent directory for temporary analysis storage")
     record = sub.add_parser("create-provenance", help="emit an unsigned suite/run consistency sidecar")
     record.add_argument("suite")
     record.add_argument("run")
@@ -74,6 +83,13 @@ def main(argv: list[str] | None = None) -> int:
     export.add_argument("--run-id", required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == "compare-repeated-jsonl":
+            for event in compare_repeated_jsonl(
+                args.suite, args.baseline, args.candidate, seed=args.seed, resamples=args.resamples,
+                max_record_bytes=args.max_record_bytes, temporary_directory=args.temporary_directory,
+            ):
+                print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
+            return 0
         if args.command == "verify-provenance-jsonl":
             report = verify_provenance_jsonl(
                 args.suite, args.run, args.provenance,

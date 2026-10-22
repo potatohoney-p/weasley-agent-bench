@@ -18,8 +18,8 @@
 - **Repeated-run analysis:** complete runs pair by trial/task ID; bootstrap
   resampling retains the whole paired suite trial and uses a fixed seed.
   Acceptance: the synthetic fixture's counts/interval match an exhaustive
-  reference distribution, reordering does not change the report, duplicated
-  correlated tasks do not narrow the interval, and missing/duplicated trials
+  reference distribution, reordering does not change the report, uniformly
+  duplicating every task leaves the interval unchanged, and missing/duplicated trials
   or incomplete runs fail. Intervals are conditional on the fixed suite and
   independent representative trial pairs, not provider rankings.
 - **Optional artifact provenance:** separate versioned sidecars bind one suite
@@ -59,7 +59,15 @@
   original meaning. Explicit file/sidecar bounds support offline checks without
   claiming historical execution authenticity or real-workload adoption.
 
-Tests, examples, documentation, and packaging support those nine outcomes. They
+- **Bounded repeated JSONL analysis:** strict batch/trial framing and disk-backed
+  pass observations preserve complete paired trials, canonical suite identity and
+  the legacy whole-trial bootstrap. Acceptance: exact legacy reports and an
+  exhaustive synthetic reference agree; malformed/missing/duplicate observations
+  emit no report; trial ordering and RNG replay are preserved; resource evidence
+  distinguishes bounded memory from bootstrap work. Distinct IDs do not establish
+  independent repetitions or effective sample size; inference remains conditional.
+
+Tests, examples, documentation, and packaging support those ten outcomes. They
 are not additional work units.
 
 ## Next, in priority order
@@ -76,8 +84,9 @@ are not additional work units.
    errors. The original condition, that real suite sizes justify adoption, remains
    unvalidated. Paired comparison is available as an opt-in research extension
    with synthetic acceptance evidence. Use consented workload measurements before
-   deciding on production adoption, repeated-run JSONL analysis, or changes to
-   default ingestion.
+   deciding on production adoption or changes to default ingestion. Repeated-run
+   JSONL analysis is available as an opt-in research extension; it does not supply
+   the missing consented workload or independent-trial evidence.
 
 ## Publication status
 

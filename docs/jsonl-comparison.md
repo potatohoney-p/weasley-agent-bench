@@ -105,7 +105,8 @@ Consume or close the iterator to release temporary storage. Forced termination
 may leave scratch files. This is not a CPU timeout, filesystem sandbox, resumable
 database, or live-run pipeline. Standard-library SQLite availability is required.
 
-Paired repeated-run JSONL analysis remains outside this capability. The separate
+Paired repeated-run analysis uses the separate
+[`compare-repeated-jsonl`](jsonl-repeated.md) command. The separate
 [`verify-provenance-jsonl`](jsonl-provenance.md) command checks retained sidecars
 against the suite and each run before comparison when requested. Existing
 commands keep their original input formats and do not verify sidecars implicitly.
