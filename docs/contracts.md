@@ -199,3 +199,16 @@ failures, and the exact existing canonical suite digest. Output consists of a
 header, one result event per task, and a required completion summary. Consumers
 must reject partial output without that summary. Legacy JSON contracts and
 scoring are unchanged. See [the protocol and resource bounds](jsonl-evaluation.md).
+
+## Historical tau2 observation fidelity
+
+The opt-in library adapter and `python -m experiments.tau2_fidelity` workflow
+accept one strict minimized historical six-message profile. Native argument
+objects, explicit boolean outcomes and saved output text map to ordinary v1 tool
+fields. A labeled derived final observation contains assistant text, native
+episode/call identity and a canonical argument digest. A frozen reviewed suite
+checks fidelity through existing assertions; it does not evaluate task success.
+Malformed native evidence fails before export, while supported content mutations
+export and fail the relevant fidelity assertions. All usage remains unreported.
+Legacy and JSONL evaluation produce identical complete reports. See the
+[profile, source attribution, conversion losses and limits](tau2-fidelity.md).

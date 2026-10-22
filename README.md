@@ -24,7 +24,7 @@ python -m weasley_agent_bench evaluate examples/suite.json examples/candidate.js
 python -m weasley_agent_bench compare examples/suite.json examples/baseline.json examples/candidate.json
 ```
 
-All data is hand-authored and synthetic. The baseline fails two of four tasks:
+The four-task demo is hand-authored and synthetic. The baseline fails two tasks:
 it recalls a superseded fact and loses a child's review finding. The candidate
 passes all four. This proves the evaluator's behavior; it measures no real
 provider or model capability.
@@ -120,6 +120,22 @@ tasks are not independent bootstrap samples. This command is descriptive,
 not a significance or regression gate. See the [method and input format](docs/repeated-runs.md).
 
 ## Use your own runner
+
+### Historical adapter fidelity
+
+One separately attributed public historical tau2 episode exercises preservation
+of native arguments, output, final assistant text and identity:
+
+```bash
+python -m experiments.tau2_fidelity
+```
+
+It checks a frozen observation contract through legacy and bounded JSONL
+evaluation. This recorded interaction occurred in a simulated benchmark; passing
+means fidelity to the reviewed record, not task success, provider quality or
+execution authenticity. Usage remains unreported. The
+[source, MIT attribution, profile and loss accounting](docs/tau2-fidelity.md)
+describe this narrow historical exception and synthetic mutation checks.
 
 Before spending a run, optionally check for impossible required-call budgets:
 

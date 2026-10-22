@@ -43,7 +43,16 @@
   deterministic synthetic scaling harness measures memory and disk growth in
   fresh processes. This is engineering evidence, not observed real-workload demand.
 
-Tests, examples, documentation, and packaging support those seven outcomes. They
+- **Historical tau2 observation fidelity:** one reviewed public simulated
+  episode maps explicit native arguments/outcomes/output and final assistant
+  text into existing v1 assertions, with native identity and canonical argument
+  representation retained in a derived observation envelope. Acceptance: the
+  original matches an independent literal oracle; deliberate content/identity
+  drift fails fidelity, malformed evidence is rejected, and legacy/JSONL reports
+  match. Source attribution, losses and unavailable usage remain explicit. This
+  checks adapter compatibility, not task success or current model performance.
+
+Tests, examples, documentation, and packaging support those eight outcomes. They
 are not additional work units.
 
 ## Next, in priority order
