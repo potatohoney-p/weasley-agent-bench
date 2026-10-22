@@ -1,0 +1,307 @@
+{
+  "cases": [
+    {
+      "comparison_parity": true,
+      "fixture_bytes": {
+        "baseline.json": 177990,
+        "baseline.jsonl": 178063,
+        "candidate.json": 173299,
+        "candidate.jsonl": 173372,
+        "suite.json": 113353,
+        "suite.jsonl": 113430
+      },
+      "measurements": [
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 0.18017331300507067,
+          "logical_report_sha256": "bacdcd3c261df7b81943524b8f3506c49e46caa86e61687198f293a92e5727de",
+          "mode": "legacy",
+          "no_regressions": false,
+          "ordered_changes_sha256": "b883bd380347abd01d1123f808b299bc4df96af41875138e344827dc273e2c98",
+          "process_ru_maxrss": 28940,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "a55283b5aea37a987fc287ef3f29ac55e9b887d7384ff03b4f029557be4c876c",
+          "summary": {
+            "baseline_passed": 250,
+            "candidate_passed": 250,
+            "improvements": 125,
+            "regressions": 125,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 4133458
+        },
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 0.3374795210038428,
+          "logical_report_sha256": "bacdcd3c261df7b81943524b8f3506c49e46caa86e61687198f293a92e5727de",
+          "mode": "jsonl",
+          "no_regressions": false,
+          "ordered_changes_sha256": "b883bd380347abd01d1123f808b299bc4df96af41875138e344827dc273e2c98",
+          "process_ru_maxrss": 21500,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "a55283b5aea37a987fc287ef3f29ac55e9b887d7384ff03b4f029557be4c876c",
+          "summary": {
+            "baseline_passed": 250,
+            "candidate_passed": 250,
+            "improvements": 125,
+            "regressions": 125,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 716800,
+          "tracemalloc_peak_bytes": 64182
+        }
+      ],
+      "output_bytes_per_task_per_run": 128,
+      "tasks": 500
+    },
+    {
+      "comparison_parity": true,
+      "fixture_bytes": {
+        "baseline.json": 2161991,
+        "baseline.jsonl": 2162064,
+        "candidate.json": 2157300,
+        "candidate.jsonl": 2157373,
+        "suite.json": 113354,
+        "suite.jsonl": 113431
+      },
+      "measurements": [
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 0.18856155699904775,
+          "logical_report_sha256": "41b116f610ef18886f6e8581dda3aea60b0c1d8a000d6978b9861cc4d98dc853",
+          "mode": "legacy",
+          "no_regressions": false,
+          "ordered_changes_sha256": "b883bd380347abd01d1123f808b299bc4df96af41875138e344827dc273e2c98",
+          "process_ru_maxrss": 33252,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "1aaa3c8d03364a4fcd460bc23c492e90f74dc8e552d7a20c0d6631f90444e265",
+          "summary": {
+            "baseline_passed": 250,
+            "candidate_passed": 250,
+            "improvements": 125,
+            "regressions": 125,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 8194565
+        },
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 0.3553323080050177,
+          "logical_report_sha256": "41b116f610ef18886f6e8581dda3aea60b0c1d8a000d6978b9861cc4d98dc853",
+          "mode": "jsonl",
+          "no_regressions": false,
+          "ordered_changes_sha256": "b883bd380347abd01d1123f808b299bc4df96af41875138e344827dc273e2c98",
+          "process_ru_maxrss": 24676,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "1aaa3c8d03364a4fcd460bc23c492e90f74dc8e552d7a20c0d6631f90444e265",
+          "summary": {
+            "baseline_passed": 250,
+            "candidate_passed": 250,
+            "improvements": 125,
+            "regressions": 125,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 4915200,
+          "tracemalloc_peak_bytes": 78739
+        }
+      ],
+      "output_bytes_per_task_per_run": 4096,
+      "tasks": 500
+    },
+    {
+      "comparison_parity": true,
+      "fixture_bytes": {
+        "baseline.json": 1800351,
+        "baseline.jsonl": 1800425,
+        "candidate.json": 1749893,
+        "candidate.jsonl": 1749967,
+        "suite.json": 1142854,
+        "suite.jsonl": 1142932
+      },
+      "measurements": [
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 1.969862144003855,
+          "logical_report_sha256": "98224d27108dbbc5be98a66c4157c26d6e3fb201fedb7f5b7562fc2759431720",
+          "mode": "legacy",
+          "no_regressions": false,
+          "ordered_changes_sha256": "ae8e323ea819a3c7923ca945449010fc94fa7673e4a2f32cc3aea4128f6c5ebe",
+          "process_ru_maxrss": 127868,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "36cef1beb620cc102eddc45751d86cc8073aabe818b18cae4bb5420b70cda3b7",
+          "summary": {
+            "baseline_passed": 2500,
+            "candidate_passed": 2500,
+            "improvements": 1250,
+            "regressions": 1250,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 41761295
+        },
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 2.9443767960037803,
+          "logical_report_sha256": "98224d27108dbbc5be98a66c4157c26d6e3fb201fedb7f5b7562fc2759431720",
+          "mode": "jsonl",
+          "no_regressions": false,
+          "ordered_changes_sha256": "ae8e323ea819a3c7923ca945449010fc94fa7673e4a2f32cc3aea4128f6c5ebe",
+          "process_ru_maxrss": 22988,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "36cef1beb620cc102eddc45751d86cc8073aabe818b18cae4bb5420b70cda3b7",
+          "summary": {
+            "baseline_passed": 2500,
+            "candidate_passed": 2500,
+            "improvements": 1250,
+            "regressions": 1250,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 7081984,
+          "tracemalloc_peak_bytes": 64928
+        }
+      ],
+      "output_bytes_per_task_per_run": 128,
+      "tasks": 5000
+    },
+    {
+      "comparison_parity": true,
+      "fixture_bytes": {
+        "baseline.json": 21640352,
+        "baseline.jsonl": 21640426,
+        "candidate.json": 21589894,
+        "candidate.jsonl": 21589968,
+        "suite.json": 1142855,
+        "suite.jsonl": 1142933
+      },
+      "measurements": [
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 1.8355658939981367,
+          "logical_report_sha256": "8264f434110243a6bb845bc28bfbc6d73cd77f54fe59f49d8776b36c6c31f81e",
+          "mode": "legacy",
+          "no_regressions": false,
+          "ordered_changes_sha256": "ae8e323ea819a3c7923ca945449010fc94fa7673e4a2f32cc3aea4128f6c5ebe",
+          "process_ru_maxrss": 171172,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "46ed08e1a974445131b7ac9b518bedf32c3aa700e530c9a28a725ad3b704df57",
+          "summary": {
+            "baseline_passed": 2500,
+            "candidate_passed": 2500,
+            "improvements": 1250,
+            "regressions": 1250,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 82427820
+        },
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 3.1554827200016007,
+          "logical_report_sha256": "8264f434110243a6bb845bc28bfbc6d73cd77f54fe59f49d8776b36c6c31f81e",
+          "mode": "jsonl",
+          "no_regressions": false,
+          "ordered_changes_sha256": "ae8e323ea819a3c7923ca945449010fc94fa7673e4a2f32cc3aea4128f6c5ebe",
+          "process_ru_maxrss": 23184,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "46ed08e1a974445131b7ac9b518bedf32c3aa700e530c9a28a725ad3b704df57",
+          "summary": {
+            "baseline_passed": 2500,
+            "candidate_passed": 2500,
+            "improvements": 1250,
+            "regressions": 1250,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 49070080,
+          "tracemalloc_peak_bytes": 79655
+        }
+      ],
+      "output_bytes_per_task_per_run": 4096,
+      "tasks": 5000
+    },
+    {
+      "comparison_parity": true,
+      "fixture_bytes": {
+        "baseline.json": 86620463,
+        "baseline.jsonl": 86620538,
+        "candidate.json": 86408738,
+        "candidate.jsonl": 86408813,
+        "suite.json": 4597856,
+        "suite.jsonl": 4597935
+      },
+      "measurements": [
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 8.342182947002584,
+          "logical_report_sha256": "963b07a023ec5eb95498d2141316ebc14f1892318c20916cd6045d5799e0f48f",
+          "mode": "legacy",
+          "no_regressions": false,
+          "ordered_changes_sha256": "bd0d7c08f45480cf57432ebafb931920a61d28e39d7e4db0ac6ea45e1253328a",
+          "process_ru_maxrss": 608464,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "15c523a9f92b0b4070169c84658e4dc67398b1f3f12d207ca6d89a841baf3f69",
+          "summary": {
+            "baseline_passed": 10000,
+            "candidate_passed": 10000,
+            "improvements": 5000,
+            "regressions": 5000,
+            "total": 20000
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 329945829
+        },
+        {
+          "candidate_passed": false,
+          "elapsed_wall_seconds": 12.305410333996406,
+          "logical_report_sha256": "963b07a023ec5eb95498d2141316ebc14f1892318c20916cd6045d5799e0f48f",
+          "mode": "jsonl",
+          "no_regressions": false,
+          "ordered_changes_sha256": "bd0d7c08f45480cf57432ebafb931920a61d28e39d7e4db0ac6ea45e1253328a",
+          "process_ru_maxrss": 22824,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "15c523a9f92b0b4070169c84658e4dc67398b1f3f12d207ca6d89a841baf3f69",
+          "summary": {
+            "baseline_passed": 10000,
+            "candidate_passed": 10000,
+            "improvements": 5000,
+            "regressions": 5000,
+            "total": 20000
+          },
+          "temporary_disk_peak_sampled_bytes": 196444160,
+          "tracemalloc_peak_bytes": 81007
+        }
+      ],
+      "output_bytes_per_task_per_run": 4096,
+      "tasks": 20000
+    }
+  ],
+  "environment": {
+    "platform": "Linux-5.15.153.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]"
+  },
+  "measurement": {
+    "digest": "SHA-256 of canonical v1 metadata, both final flags, summary, change count and ordered canonical-change SHA-256",
+    "excludes": "fixture generation, child process startup and evaluator module import",
+    "fresh_process_per_case_and_mode": true,
+    "includes": "input loading, validation, paired scoring and compact comparison digest consumption",
+    "max_record_bytes": 1048576,
+    "ru_maxrss": "Whole child process lifetime peak; null on Windows; includes tracing overhead",
+    "temporary_disk": "Sampled logical file bytes in isolated scratch directory; a lower bound on peak, not allocated disk blocks",
+    "temporary_disk_sample_interval_seconds": 0.01,
+    "tracemalloc": "Python allocations during comparison, including sampler bookkeeping; excludes SQLite/native allocations",
+    "working_set": "JSONL retains a task and two result records plus database/interpreter caches; record byte limits are not process-memory hard limits"
+  },
+  "purpose": "Offline paired-comparison engineering measurements; not provider performance or real workload demand",
+  "recorded_date_kst": "2026-10-23",
+  "recorded_date_utc": "2026-10-22",
+  "schema_version": 1,
+  "synthetic": true,
+  "workload": {
+    "baseline_order": "descending task index",
+    "candidate_order": "even indices then odd indices",
+    "suite_order": "ascending task index",
+    "transitions": "index modulo 4: improvement, regression, unchanged pass, unchanged failure",
+    "usage": "shared input_tokens and fractional duration; candidate output_tokens absent at odd indices, zero at indices divisible by four"
+  }
+}

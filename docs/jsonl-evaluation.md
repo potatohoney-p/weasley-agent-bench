@@ -124,10 +124,11 @@ storage, not a durable resumable database. Saved input may be written to scratch
 use a suitable local filesystem for consented data. No sandbox or trust boundary
 for hostile workloads is claimed.
 
-This command currently evaluates one saved run. Streaming comparisons, repeated
-trials, exporter output, provenance-sidecar file verification, resumability, and
-live execution are outside this transport's scope. Existing tools still consume
-their existing JSON documents.
+This command evaluates one saved run. The separate opt-in
+[`compare-jsonl` command](jsonl-comparison.md) compares two complete runs in the
+same input formats. Repeated trials, exporter output, provenance-sidecar file
+verification, resumability, and live execution remain outside this transport's
+scope. Existing JSON tools still consume their existing documents.
 
 ## Reproduce synthetic scaling evidence
 

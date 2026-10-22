@@ -199,3 +199,13 @@ failures, and the exact existing canonical suite digest. Output consists of a
 header, one result event per task, and a required completion summary. Consumers
 must reject partial output without that summary. Legacy JSON contracts and
 scoring are unchanged. See [the protocol and resource bounds](jsonl-evaluation.md).
+
+`compare-jsonl` accepts the same suite/run transports for a shared suite and two
+complete runs. It rejects missing coverage on either side, while retaining
+arbitrary order and allowing identical run IDs across sides. Change rows, jointly
+observed usage deltas, flags, and summary exactly match legacy `compare`. Its
+`weasley-agent-bench/comparison-jsonl` output has one header, ordered change
+events, and a required completion summary. Exit 0 means no regressions, not that
+all candidate tasks passed. Both input streams and all scores are validated before
+output. Matching suite IDs do not attest to historical suite contents; the supplied
+suite defines intentional rescoring. See [paired comparison](jsonl-comparison.md).

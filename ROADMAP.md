@@ -43,7 +43,15 @@
   deterministic synthetic scaling harness measures memory and disk growth in
   fresh processes. This is engineering evidence, not observed real-workload demand.
 
-Tests, examples, documentation, and packaging support those seven outcomes. They
+- **Bounded paired JSONL comparison:** the opt-in regression gate pairs two
+  complete runs using temporary disk indexes and shared legacy comparison rules.
+  Acceptance: exact ordered changes/digest/flags match legacy comparison despite
+  shuffled inputs; equal aggregate scores cannot hide a regression; missing or
+  malformed late input emits no report; fresh-process synthetic measurements
+  expose memory/disk/time tradeoffs. This extends research capability without
+  establishing real-workload adoption.
+
+Tests, examples, documentation, and packaging support those eight outcomes. They
 are not additional work units.
 
 ## Next, in priority order
@@ -58,8 +66,10 @@ are not additional work units.
 2. **Real-workload adoption of scalable ingestion.** The opt-in JSONL path has
    synthetic parity and scaling coverage with documented bounds and line-numbered
    errors. The original condition, that real suite sizes justify adoption, remains
-   unvalidated. Use consented workload measurements before extending JSONL support
-   to paired/repeated analysis or changing default ingestion.
+   unvalidated. Paired comparison is available as an opt-in research extension
+   with synthetic acceptance evidence. Use consented workload measurements before
+   deciding on production adoption, repeated-run JSONL analysis, or changes to
+   default ingestion.
 
 ## Publication status
 

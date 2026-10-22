@@ -9,11 +9,12 @@ import sqlite3
 import sys
 import tempfile
 from collections.abc import Iterator
+from contextlib import closing, contextmanager
 
 from .contracts import (
     ContractError, _constant, _object, _pairs, _string, _validate_result, _validate_task,
 )
-from .scoring import _evaluate_task
+from .scoring import _compare_rows, _evaluate_task
 
 DEFAULT_MAX_RECORD_BYTES = 1024 * 1024
 
@@ -50,34 +51,35 @@ def _records(path: str | Path, source: str, limit: int) -> Iterator[tuple[int, d
         raise _error(source, line, "cannot read input") from error
 
 
-def _header(record: dict, source: str) -> None:
+def _header(record: dict, kind: str, source: str) -> None:
     try:
         fields = {"format", "format_version", "schema_version", "suite_id"}
-        if source == "run":
+        if kind == "run":
             fields.add("run_id")
         _object(record, "header", fields)
-        if record["format"] != f"weasley-agent-bench/{source}-jsonl":
+        if record["format"] != f"weasley-agent-bench/{kind}-jsonl":
             raise ContractError("unsupported format")
         for field in ("format_version", "schema_version"):
             if type(record[field]) is not int or record[field] != 1:
                 raise ContractError("unsupported version")
         _string(record["suite_id"], "header.suite_id")
-        if source == "run":
+        if kind == "run":
             _string(record["run_id"], "header.run_id")
     except ContractError as error:
         raise _error(source, 1, "invalid or unsupported header") from error
 
 
-def _ingest(db: sqlite3.Connection, path: str | Path, source: str, limit: int,
-            suite_id: str | None = None) -> tuple[dict, int, str | None]:
+def _ingest(db: sqlite3.Connection, path: str | Path, kind: str, limit: int,
+            suite_id: str | None = None, *, source: str | None = None) -> tuple[dict, int, str | None]:
+    source = source or kind
     stream = _records(path, source, limit)
     try:
         first = next(stream, None)
         if first is None:
             raise _error(source, 1, "missing header")
         _, header = first
-        _header(header, source)
-        if source == "run" and header["suite_id"] != suite_id:
+        _header(header, kind, source)
+        if kind == "run" and header["suite_id"] != suite_id:
             raise _error(source, 1, "suite_id does not match the task suite")
         digest = hashlib.sha256()
         # Exact sorted-key v1 document representation, including original task order.
@@ -90,15 +92,15 @@ def _ingest(db: sqlite3.Connection, path: str | Path, source: str, limit: int,
                 if (set(record) != {"end", "count"} or record["end"] is not True
                         or type(record["count"]) is not int or record["count"] != count):
                     raise _error(source, line, "invalid end marker or record count")
-                if source == "suite" and count == 0:
+                if kind == "suite" and count == 0:
                     raise _error(source, line, "at least one task is required")
                 trailing = next(stream, None)
                 if trailing is not None:
                     raise _error(source, trailing[0], "record after end marker")
                 digest.update(b"]}")
-                return header, count, digest.hexdigest() if source == "suite" else None
+                return header, count, digest.hexdigest() if kind == "suite" else None
             try:
-                if source == "suite":
+                if kind == "suite":
                     _validate_task(record, "task")
                     payload = _canonical(record)
                     db.execute("INSERT INTO tasks VALUES (?, ?, ?)",
@@ -111,16 +113,43 @@ def _ingest(db: sqlite3.Connection, path: str | Path, source: str, limit: int,
                     key = _canonical(record["task_id"])
                     if db.execute("SELECT 1 FROM tasks WHERE id = ?", (key,)).fetchone() is None:
                         raise _error(source, line, "unknown task ID")
-                    db.execute("INSERT INTO results VALUES (?, ?)", (key, _canonical(record)))
+                    db.execute("INSERT INTO results VALUES (?, ?, ?)", (source, key, _canonical(record)))
             except sqlite3.IntegrityError as error:
                 raise _error(source, line, "duplicate task ID") from error
             except (ValueError, RecursionError) as error:
                 # Do not echo record values, unknown field names, or saved payloads.
-                raise _error(source, line, f"invalid {source} record contract") from error
+                raise _error(source, line, f"invalid {kind} record contract") from error
             count += 1
         raise _error(source, line + 1, "missing end marker")
     finally:
         stream.close()
+
+
+@contextmanager
+def _storage(max_record_bytes: int, temporary_directory: str | Path | None) -> Iterator[sqlite3.Connection]:
+    if type(max_record_bytes) is not int or not 1 <= max_record_bytes < sys.maxsize:
+        raise ContractError("max_record_bytes must be a positive integer below sys.maxsize")
+    try:
+        with tempfile.TemporaryDirectory(prefix="weasley-jsonl-", dir=temporary_directory) as directory:
+            db = sqlite3.connect(Path(directory) / "evaluation.sqlite3")
+            try:
+                db.execute("PRAGMA cache_size = -2048")
+                db.execute("PRAGMA temp_store = FILE")
+                db.execute("PRAGMA mmap_size = 0")
+                db.execute("CREATE TABLE tasks (ordinal INTEGER PRIMARY KEY, id TEXT UNIQUE, payload TEXT)")
+                db.execute("CREATE TABLE results (source TEXT, id TEXT, payload TEXT, PRIMARY KEY (source, id))")
+                db.execute("CREATE TABLE reports (ordinal INTEGER PRIMARY KEY, payload TEXT)")
+                yield db
+            finally:
+                db.close()
+    except (OSError, sqlite3.Error) as error:
+        raise ContractError("JSONL evaluation temporary storage failure") from error
+
+
+def _report_events(db: sqlite3.Connection, field: str) -> Iterator[dict]:
+    with closing(db.execute("SELECT payload FROM reports ORDER BY ordinal")) as rows:
+        for (payload,) in rows:
+            yield {field: json.loads(payload)}
 
 
 def evaluate_jsonl(suite_path: str | Path, run_path: str | Path, *,
@@ -133,45 +162,77 @@ def evaluate_jsonl(suite_path: str | Path, run_path: str | Path, *,
     Consume the iterator completely, or close it, to release temporary storage.
     Only the terminal complete=true event establishes a complete report.
     """
-    if type(max_record_bytes) is not int or not 1 <= max_record_bytes < sys.maxsize:
-        raise ContractError("max_record_bytes must be a positive integer below sys.maxsize")
-    try:
-        with tempfile.TemporaryDirectory(prefix="weasley-jsonl-", dir=temporary_directory) as directory:
-            db = sqlite3.connect(Path(directory) / "evaluation.sqlite3")
-            try:
-                db.execute("PRAGMA cache_size = -2048")
-                db.execute("PRAGMA temp_store = FILE")
-                db.execute("PRAGMA mmap_size = 0")
-                db.execute("CREATE TABLE tasks (ordinal INTEGER PRIMARY KEY, id TEXT UNIQUE, payload TEXT)")
-                db.execute("CREATE TABLE results (id TEXT PRIMARY KEY, payload TEXT)")
-                db.execute("CREATE TABLE reports (ordinal INTEGER PRIMARY KEY, payload TEXT)")
-                suite, total, digest = _ingest(db, suite_path, "suite", max_record_bytes)
-                run, observed, _ = _ingest(db, run_path, "run", max_record_bytes, suite["suite_id"])
-                db.commit()
-                passed = 0
-                # The integer primary key supplies suite order without an in-memory sort.
-                rows = db.execute(
-                    "SELECT tasks.ordinal, tasks.payload, results.payload FROM tasks "
-                    "LEFT JOIN results ON results.id = tasks.id ORDER BY tasks.ordinal"
-                )
-                for ordinal, task, result in rows:
-                    try:
-                        row = _evaluate_task(json.loads(task), json.loads(result) if result else None)
-                        payload = _canonical(row)
-                    except (ValueError, RecursionError) as error:
-                        raise _error("suite", ordinal + 2, "record exceeds scoring limits") from error
-                    passed += row["passed"]
-                    db.execute("INSERT INTO reports VALUES (?, ?)", (ordinal, payload))
-                db.commit()
-                yield {"format": "weasley-agent-bench/report-jsonl", "format_version": 1,
-                       "schema_version": 1, "suite_id": suite["suite_id"],
-                       "suite_sha256": digest, "run_id": run["run_id"]}
-                for (payload,) in db.execute("SELECT payload FROM reports ORDER BY ordinal"):
-                    yield {"result": json.loads(payload)}
-                yield {"complete": True, "passed": passed == total,
-                       "summary": {"total": total, "passed": passed, "failed": total - passed,
-                                   "missing": total - observed}}
-            finally:
-                db.close()
-    except (OSError, sqlite3.Error) as error:
-        raise ContractError("JSONL evaluation temporary storage failure") from error
+    with _storage(max_record_bytes, temporary_directory) as db:
+        suite, total, digest = _ingest(db, suite_path, "suite", max_record_bytes)
+        run, observed, _ = _ingest(db, run_path, "run", max_record_bytes, suite["suite_id"])
+        db.commit()
+        passed = 0
+        # The integer primary key supplies suite order without an in-memory sort.
+        with closing(db.execute(
+            "SELECT tasks.ordinal, tasks.payload, results.payload FROM tasks "
+            "LEFT JOIN results ON results.id = tasks.id AND results.source = 'run' ORDER BY tasks.ordinal"
+        )) as rows:
+            for ordinal, task, result in rows:
+                try:
+                    row = _evaluate_task(json.loads(task), json.loads(result) if result else None)
+                    payload = _canonical(row)
+                except (ValueError, RecursionError) as error:
+                    raise _error("suite", ordinal + 2, "record exceeds scoring limits") from error
+                passed += row["passed"]
+                db.execute("INSERT INTO reports VALUES (?, ?)", (ordinal, payload))
+        db.commit()
+        yield {"format": "weasley-agent-bench/report-jsonl", "format_version": 1,
+               "schema_version": 1, "suite_id": suite["suite_id"],
+               "suite_sha256": digest, "run_id": run["run_id"]}
+        yield from _report_events(db, "result")
+        yield {"complete": True, "passed": passed == total,
+               "summary": {"total": total, "passed": passed, "failed": total - passed,
+                           "missing": total - observed}}
+
+
+def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_path: str | Path, *,
+                  max_record_bytes: int = DEFAULT_MAX_RECORD_BYTES,
+                  temporary_directory: str | Path | None = None) -> Iterator[dict]:
+    """Compare two complete saved runs with bounded records and temporary indexes.
+
+    The inputs use the existing suite/run JSONL formats. Output changes follow
+    suite order, with the same semantics as compare(). Only the terminal complete
+    summary establishes a complete report. Consume or close the iterator.
+    """
+    with _storage(max_record_bytes, temporary_directory) as db:
+        suite, total, digest = _ingest(db, suite_path, "suite", max_record_bytes)
+        baseline, old_count, _ = _ingest(db, baseline_path, "run", max_record_bytes,
+                                       suite["suite_id"], source="baseline")
+        candidate, new_count, _ = _ingest(db, candidate_path, "run", max_record_bytes,
+                                        suite["suite_id"], source="candidate")
+        # Counts establish complete coverage only after unique/known-ID validation.
+        if old_count != total or new_count != total:
+            raise ContractError("comparison requires one result for every task in both runs")
+        db.commit()
+        summary = {"total": total, "regressions": 0, "improvements": 0,
+                   "baseline_passed": 0, "candidate_passed": 0}
+        with closing(db.execute(
+            "SELECT tasks.ordinal, tasks.payload, old.payload, new.payload FROM tasks "
+            "LEFT JOIN results AS old ON old.id = tasks.id AND old.source = 'baseline' "
+            "LEFT JOIN results AS new ON new.id = tasks.id AND new.source = 'candidate' ORDER BY tasks.ordinal"
+        )) as rows:
+            for ordinal, task, old, new in rows:
+                try:
+                    task, old, new = json.loads(task), json.loads(old), json.loads(new)
+                    change = _compare_rows(_evaluate_task(task, old), _evaluate_task(task, new),
+                                           old.get("usage", {}), new.get("usage", {}))
+                    payload = _canonical(change)
+                except (ValueError, RecursionError) as error:
+                    raise _error("suite", ordinal + 2, "record exceeds scoring limits") from error
+                summary["regressions"] += change["change"] == "regression"
+                summary["improvements"] += change["change"] == "improvement"
+                summary["baseline_passed"] += change["baseline_passed"]
+                summary["candidate_passed"] += change["candidate_passed"]
+                db.execute("INSERT INTO reports VALUES (?, ?)", (ordinal, payload))
+        db.commit()
+        yield {"format": "weasley-agent-bench/comparison-jsonl", "format_version": 1,
+               "schema_version": 1, "suite_id": suite["suite_id"], "suite_sha256": digest,
+               "baseline_run_id": baseline["run_id"], "candidate_run_id": candidate["run_id"]}
+        yield from _report_events(db, "change")
+        yield {"complete": True, "no_regressions": summary["regressions"] == 0,
+               "candidate_passed": summary["candidate_passed"] == total, "summary": summary}
