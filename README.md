@@ -11,7 +11,7 @@ This offline prototype separates four questions:
 4. How variable is a paired pass-rate change across repeated trials on a fixed suite?
 
 The library and CLI use only Python's standard library. Python 3.11+ is required.
-No accounts, API keys, database, network service, or package installation are
+No accounts, API keys, external database, network service, or package installation are
 needed to run from source.
 
 ## Reproduce the demo
@@ -28,6 +28,17 @@ All data is hand-authored and synthetic. The baseline fails two of four tasks:
 it recalls a superseded fact and loses a child's review finding. The candidate
 passes all four. This proves the evaluator's behavior; it measures no real
 provider or model capability.
+
+For suites and saved outputs that should not be retained entirely in memory,
+an opt-in JSONL evaluator uses bounded records and temporary local SQLite storage:
+
+```bash
+python -m weasley_agent_bench evaluate-jsonl examples/jsonl/suite.jsonl examples/jsonl/candidate.jsonl
+```
+
+It preserves the same scores, suite digest, and missing-task failures. A terminal
+summary marks a complete report. See [JSONL input, output, resource bounds, and
+synthetic scaling measurements](docs/jsonl-evaluation.md).
 
 | Task | Baseline | Candidate | Contract exercised |
 | --- | --- | --- | --- |

@@ -8,6 +8,7 @@ import sys
 
 from .contracts import ContractError, load_document
 from .scoring import compare, evaluate
+from .jsonl import DEFAULT_MAX_RECORD_BYTES, evaluate_jsonl
 from .repeated import compare_repeated
 from .provenance import create_provenance, verify_provenance
 from .linting import lint_suite
@@ -24,6 +25,11 @@ def main(argv: list[str] | None = None) -> int:
     score = sub.add_parser("evaluate", help="score one saved run against a task suite")
     score.add_argument("suite")
     score.add_argument("run")
+    stream = sub.add_parser("evaluate-jsonl", help="score bounded JSONL files using temporary disk storage")
+    stream.add_argument("suite")
+    stream.add_argument("run")
+    stream.add_argument("--max-record-bytes", type=int, default=DEFAULT_MAX_RECORD_BYTES)
+    stream.add_argument("--temporary-directory", help="parent directory for temporary evaluation storage")
     diff = sub.add_parser("compare", help="compare two complete runs on the same tasks")
     diff.add_argument("suite")
     diff.add_argument("baseline")
@@ -51,6 +57,11 @@ def main(argv: list[str] | None = None) -> int:
     export.add_argument("--run-id", required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == "evaluate-jsonl":
+            for event in evaluate_jsonl(args.suite, args.run, max_record_bytes=args.max_record_bytes,
+                                        temporary_directory=args.temporary_directory):
+                print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
+            return 0 if event["passed"] else 1
         suite = load_document(args.suite)
         if args.command == "export-subagents":
             report = export_subagents(suite, load_subagents_transcript(args.transcript),
