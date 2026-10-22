@@ -39,6 +39,14 @@ def verify_provenance(
     """
     validate_suite(suite)
     validate_run(run, suite)
+    _validate_provenance(provenance, expected_runner_revision)
+    return _verification_report(
+        provenance, suite["suite_id"], run["run_id"],
+        _document_sha256(suite), _document_sha256(run), expected_runner_revision,
+    )
+
+
+def _validate_provenance(provenance: dict, expected_runner_revision: str | None) -> None:
     fields = {
         "schema_version", "suite_id", "run_id", "suite_sha256", "run_sha256", "runner_revision",
     }
@@ -57,9 +65,15 @@ def verify_provenance(
             _fail(f"provenance.{field}", "expected 64 lowercase hexadecimal characters")
     if expected_runner_revision is not None:
         _string(expected_runner_revision, "expected_runner_revision")
+
+
+def _verification_report(provenance: dict, suite_id: str, run_id: str,
+                         suite_sha256: str, run_sha256: str,
+                         expected_runner_revision: str | None) -> dict:
+    # Callers validate the sidecar and compute these digests from validated inputs.
     for field, expected in (
-        ("suite_id", suite["suite_id"]), ("run_id", run["run_id"]),
-        ("suite_sha256", _document_sha256(suite)), ("run_sha256", _document_sha256(run)),
+        ("suite_id", suite_id), ("run_id", run_id),
+        ("suite_sha256", suite_sha256), ("run_sha256", run_sha256),
     ):
         if provenance[field] != expected:
             _fail(f"provenance.{field}", "does not match the supplied artifact")

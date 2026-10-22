@@ -8,7 +8,10 @@ import sys
 
 from .contracts import ContractError, load_document
 from .scoring import compare, evaluate
-from .jsonl import DEFAULT_MAX_RECORD_BYTES, compare_jsonl, evaluate_jsonl
+from .jsonl import (
+    DEFAULT_MAX_RECORD_BYTES, DEFAULT_MAX_SIDECAR_BYTES,
+    compare_jsonl, evaluate_jsonl, verify_provenance_jsonl,
+)
 from .repeated import compare_repeated
 from .provenance import create_provenance, verify_provenance
 from .linting import lint_suite
@@ -55,6 +58,14 @@ def main(argv: list[str] | None = None) -> int:
     verify.add_argument("run")
     verify.add_argument("provenance")
     verify.add_argument("--expected-runner-revision", help="optionally require this exact declared revision")
+    verify_stream = sub.add_parser("verify-provenance-jsonl", help="check a sidecar against bounded JSONL files")
+    verify_stream.add_argument("suite")
+    verify_stream.add_argument("run")
+    verify_stream.add_argument("provenance")
+    verify_stream.add_argument("--expected-runner-revision", help="optionally require this exact declared revision")
+    verify_stream.add_argument("--max-record-bytes", type=int, default=DEFAULT_MAX_RECORD_BYTES)
+    verify_stream.add_argument("--max-sidecar-bytes", type=int, default=DEFAULT_MAX_SIDECAR_BYTES)
+    verify_stream.add_argument("--temporary-directory", help="parent directory for temporary verification storage")
     export = sub.add_parser("export-subagents", help="convert a supported saved foreground text projection")
     export.add_argument("suite")
     export.add_argument("transcript")
@@ -63,6 +74,15 @@ def main(argv: list[str] | None = None) -> int:
     export.add_argument("--run-id", required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == "verify-provenance-jsonl":
+            report = verify_provenance_jsonl(
+                args.suite, args.run, args.provenance,
+                expected_runner_revision=args.expected_runner_revision,
+                max_record_bytes=args.max_record_bytes, max_sidecar_bytes=args.max_sidecar_bytes,
+                temporary_directory=args.temporary_directory,
+            )
+            print(json.dumps(report, sort_keys=True, ensure_ascii=True, indent=2, allow_nan=False))
+            return 0
         if args.command == "compare-jsonl":
             for event in compare_jsonl(args.suite, args.baseline, args.candidate,
                                        max_record_bytes=args.max_record_bytes,

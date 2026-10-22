@@ -1,0 +1,181 @@
+{
+  "cases": [
+    {
+      "fixture_bytes": {
+        "provenance.json": 332,
+        "run.json": 2127851,
+        "run.jsonl": 2127924,
+        "suite.json": 113351,
+        "suite.jsonl": 113428
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 0.07325088199286256,
+          "mode": "legacy",
+          "process_ru_maxrss": 28748,
+          "process_ru_maxrss_unit": "KiB",
+          "report": {
+            "consistent": true,
+            "run_id": "synthetic-scaling-run",
+            "run_sha256": "1c6e4fb4870c3fa748a16163471ee5985e2cea2471f2c4b6c05ceed15aaa5cd2",
+            "runner_revision": "synthetic-provenance-scaling-v1",
+            "runner_revision_check": "matched",
+            "schema_version": 1,
+            "suite_id": "synthetic-scaling-500-4096",
+            "suite_sha256": "222945994667652c583ae044ce5f1bec4692a073afc3631da564e45325641bc3"
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 7555523
+        },
+        {
+          "elapsed_wall_seconds": 0.2109131699980935,
+          "mode": "jsonl",
+          "process_ru_maxrss": 24020,
+          "process_ru_maxrss_unit": "KiB",
+          "report": {
+            "consistent": true,
+            "run_id": "synthetic-scaling-run",
+            "run_sha256": "1c6e4fb4870c3fa748a16163471ee5985e2cea2471f2c4b6c05ceed15aaa5cd2",
+            "runner_revision": "synthetic-provenance-scaling-v1",
+            "runner_revision_check": "matched",
+            "schema_version": 1,
+            "suite_id": "synthetic-scaling-500-4096",
+            "suite_sha256": "222945994667652c583ae044ce5f1bec4692a073afc3631da564e45325641bc3"
+          },
+          "temporary_disk_peak_sampled_bytes": 607744,
+          "tracemalloc_peak_bytes": 82922
+        }
+      ],
+      "output_bytes_per_task": 4096,
+      "report_equality": true,
+      "tasks": 500
+    },
+    {
+      "fixture_bytes": {
+        "provenance.json": 333,
+        "run.json": 21287079,
+        "run.jsonl": 21287153,
+        "suite.json": 1142852,
+        "suite.jsonl": 1142930
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 0.7842581220029388,
+          "mode": "legacy",
+          "process_ru_maxrss": 113020,
+          "process_ru_maxrss_unit": "KiB",
+          "report": {
+            "consistent": true,
+            "run_id": "synthetic-scaling-run",
+            "run_sha256": "9d95e80f475cbf3edf42f90c254b1b945fb6d483a2b475eb330597d70646e9a2",
+            "runner_revision": "synthetic-provenance-scaling-v1",
+            "runner_revision_check": "matched",
+            "schema_version": 1,
+            "suite_id": "synthetic-scaling-5000-4096",
+            "suite_sha256": "bfc2b5881907f3e53c462cccb8a7defc5f2117fcaf43bbbee54a88131ae84648"
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 75776981
+        },
+        {
+          "elapsed_wall_seconds": 1.5733524459938053,
+          "mode": "jsonl",
+          "process_ru_maxrss": 23084,
+          "process_ru_maxrss_unit": "KiB",
+          "report": {
+            "consistent": true,
+            "run_id": "synthetic-scaling-run",
+            "run_sha256": "9d95e80f475cbf3edf42f90c254b1b945fb6d483a2b475eb330597d70646e9a2",
+            "runner_revision": "synthetic-provenance-scaling-v1",
+            "runner_revision_check": "matched",
+            "schema_version": 1,
+            "suite_id": "synthetic-scaling-5000-4096",
+            "suite_sha256": "bfc2b5881907f3e53c462cccb8a7defc5f2117fcaf43bbbee54a88131ae84648"
+          },
+          "temporary_disk_peak_sampled_bytes": 22812160,
+          "tracemalloc_peak_bytes": 80981
+        }
+      ],
+      "output_bytes_per_task": 4096,
+      "report_equality": true,
+      "tasks": 5000
+    },
+    {
+      "fixture_bytes": {
+        "provenance.json": 334,
+        "run.json": 85173443,
+        "run.jsonl": 85173518,
+        "suite.json": 4597853,
+        "suite.jsonl": 4597932
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 3.44260336800653,
+          "mode": "legacy",
+          "process_ru_maxrss": 402544,
+          "process_ru_maxrss_unit": "KiB",
+          "report": {
+            "consistent": true,
+            "run_id": "synthetic-scaling-run",
+            "run_sha256": "1b3e57a112a89bb642aab97f90ac699c6cfda3787374a568918a58239f64b126",
+            "runner_revision": "synthetic-provenance-scaling-v1",
+            "runner_revision_check": "matched",
+            "schema_version": 1,
+            "suite_id": "synthetic-scaling-20000-4096",
+            "suite_sha256": "2cd44a3db561a7e9e97803f0f014b156c3817e5fb49c89fad3756c2ecc6ee2c6"
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 303250836
+        },
+        {
+          "elapsed_wall_seconds": 5.844152169986046,
+          "mode": "jsonl",
+          "process_ru_maxrss": 22716,
+          "process_ru_maxrss_unit": "KiB",
+          "report": {
+            "consistent": true,
+            "run_id": "synthetic-scaling-run",
+            "run_sha256": "1b3e57a112a89bb642aab97f90ac699c6cfda3787374a568918a58239f64b126",
+            "runner_revision": "synthetic-provenance-scaling-v1",
+            "runner_revision_check": "matched",
+            "schema_version": 1,
+            "suite_id": "synthetic-scaling-20000-4096",
+            "suite_sha256": "2cd44a3db561a7e9e97803f0f014b156c3817e5fb49c89fad3756c2ecc6ee2c6"
+          },
+          "temporary_disk_peak_sampled_bytes": 96880144,
+          "tracemalloc_peak_bytes": 79596
+        }
+      ],
+      "output_bytes_per_task": 4096,
+      "report_equality": true,
+      "tasks": 20000
+    }
+  ],
+  "command_arguments": [
+    "--tasks",
+    "500",
+    "5000",
+    "20000",
+    "--output-bytes",
+    "4096",
+    "--report",
+    "/mnt/c/Users/deepf/Documents/Codex/2026-10-22/task-5/provenance-evidence/linux-provenance-scaling-final.json"
+  ],
+  "environment": {
+    "platform": "Linux-5.15.153.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]"
+  },
+  "method": {
+    "claims": "Synthetic engineering evidence only; no provider performance, execution authenticity or real workload demand claim",
+    "generation": "Separate child; full-document json.dumps plus hashlib oracle; excluded from worker RSS",
+    "limits": "JSONL API default record/sidecar limits; no process-memory cap; one record plus database/interpreter caches",
+    "ru_maxrss": "Whole worker lifetime peak including imports and tracing; native units recorded; null on Windows",
+    "scratch": "10ms sampled logical scratch file bytes; lower bound on peak, not allocated blocks; fixtures excluded",
+    "timing": "Includes file loading, validation and hashing; excludes imports, generation and process startup; tracing and disk-sampler overhead included",
+    "tracemalloc": "Python peak allocations; excludes SQLite/native memory and interpreter baseline",
+    "workers": "Fresh process per mode and task count; legacy then JSONL; one observation per case"
+  },
+  "schema_version": 1,
+  "started_at_utc": "2026-10-22T17:01:49.096612+00:00",
+  "synthetic": true
+}

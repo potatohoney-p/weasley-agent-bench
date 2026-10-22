@@ -126,8 +126,9 @@ for hostile workloads is claimed.
 
 This command evaluates one saved run. The separate opt-in
 [`compare-jsonl` command](jsonl-comparison.md) compares two complete runs in the
-same input formats. Repeated trials, exporter output, provenance-sidecar file
-verification, resumability, and live execution remain outside this transport's
+same input formats. [`verify-provenance-jsonl`](jsonl-provenance.md) separately
+checks retained sidecars against these files. Repeated trials, exporter output,
+resumability, and live execution remain outside this transport's
 scope. Existing JSON tools still consume their existing documents.
 
 ## Reproduce synthetic scaling evidence
