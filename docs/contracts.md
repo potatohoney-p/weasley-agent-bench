@@ -209,3 +209,11 @@ events, and a required completion summary. Exit 0 means no regressions, not that
 all candidate tasks passed. Both input streams and all scores are validated before
 output. Matching suite IDs do not attest to historical suite contents; the supplied
 suite defines intentional rescoring. See [paired comparison](jsonl-comparison.md).
+
+`verify-provenance-jsonl` optionally checks the existing six-field v1 sidecar
+against explicitly supplied JSONL suite/run files. It recomputes both canonical
+v1 document digests in original record order after full contract/framing checks.
+The entire sidecar has a separate byte bound; no manifest paths or URLs are
+supported. Success emits the legacy verification JSON object, after all checks;
+errors emit no report. Valid incomplete runs may be consistent but do not gain
+coverage or successful scores. See [verification boundaries](jsonl-provenance.md).

@@ -35,11 +35,17 @@ A sidecar is a strict JSON object with exactly these required fields:
 Both artifacts must first satisfy the existing version 1 input contracts.
 The sidecar schema version is independent of the suite/run schema versions.
 Unknown sidecar fields, missing fields, malformed digests, and unsupported
-versions fail. The CLI applies the same strict UTF-8/JSON loader to sidecars as
+versions fail. The legacy CLI applies the same strict UTF-8/JSON loader to sidecars as
 to suites and runs, including duplicate-key and non-finite-number rejection.
 Sidecar field-validation and mismatch errors do not echo supplied field names
 or values. Existing suite/run validation and file-read errors retain their
 previous behavior and can include field names or file paths.
+
+For bounded JSONL suite/run files, use the separate
+[`verify-provenance-jsonl` command](jsonl-provenance.md). It checks the same
+sidecar and canonical documents with a bounded sidecar loader and temporary
+disk indexes, returning the same verification report. No schema migration is
+required and no file paths are taken from sidecar content.
 
 The digest algorithm is exactly the existing report's suite digest algorithm:
 

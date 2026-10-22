@@ -15,8 +15,10 @@ from .contracts import (
     ContractError, _constant, _object, _pairs, _string, _validate_result, _validate_task,
 )
 from .scoring import _compare_rows, _evaluate_task
+from .provenance import _validate_provenance, _verification_report
 
 DEFAULT_MAX_RECORD_BYTES = 1024 * 1024
+DEFAULT_MAX_SIDECAR_BYTES = 1024 * 1024
 
 
 def _canonical(value: object) -> str:
@@ -31,7 +33,11 @@ def _error(source: str, line: int, reason: str) -> ContractError:
 def _records(path: str | Path, source: str, limit: int) -> Iterator[tuple[int, dict]]:
     line = 1
     try:
-        with Path(path).open("rb") as stream:
+        opened = Path(path).open("rb")
+    except (OSError, ValueError) as error:
+        raise _error(source, line, "cannot read input") from error
+    try:
+        with opened as stream:
             while True:
                 raw = stream.readline(limit + 1)
                 if not raw:
@@ -70,7 +76,7 @@ def _header(record: dict, kind: str, source: str) -> None:
 
 
 def _ingest(db: sqlite3.Connection, path: str | Path, kind: str, limit: int,
-            suite_id: str | None = None, *, source: str | None = None) -> tuple[dict, int, str | None]:
+            suite_id: str | None = None, *, source: str | None = None) -> tuple[dict, int, str]:
     source = source or kind
     stream = _records(path, source, limit)
     try:
@@ -82,9 +88,15 @@ def _ingest(db: sqlite3.Connection, path: str | Path, kind: str, limit: int,
         if kind == "run" and header["suite_id"] != suite_id:
             raise _error(source, 1, "suite_id does not match the task suite")
         digest = hashlib.sha256()
-        # Exact sorted-key v1 document representation, including original task order.
-        digest.update(('{"schema_version":1,"suite_id":' + _canonical(header["suite_id"])
-                       + ',"tasks":[').encode("ascii"))
+        # Exact sorted-key v1 documents; retain original task AND result order.
+        if kind == "suite":
+            prefix = '{"schema_version":1,"suite_id":' + _canonical(header["suite_id"]) + ',"tasks":['
+            suffix = "]}"
+        else:
+            prefix = '{"results":['
+            suffix = ('],"run_id":' + _canonical(header["run_id"])
+                      + ',"schema_version":1,"suite_id":' + _canonical(header["suite_id"]) + '}')
+        digest.update(prefix.encode("ascii"))
         count = 0
         line = 1
         for line, record in stream:
@@ -97,23 +109,24 @@ def _ingest(db: sqlite3.Connection, path: str | Path, kind: str, limit: int,
                 trailing = next(stream, None)
                 if trailing is not None:
                     raise _error(source, trailing[0], "record after end marker")
-                digest.update(b"]}")
-                return header, count, digest.hexdigest() if kind == "suite" else None
+                digest.update(suffix.encode("ascii"))
+                return header, count, digest.hexdigest()
             try:
                 if kind == "suite":
                     _validate_task(record, "task")
                     payload = _canonical(record)
                     db.execute("INSERT INTO tasks VALUES (?, ?, ?)",
                                (count, _canonical(record["id"]), payload))
-                    if count:
-                        digest.update(b",")
-                    digest.update(payload.encode("ascii"))
                 else:
                     _validate_result(record, "result")
                     key = _canonical(record["task_id"])
                     if db.execute("SELECT 1 FROM tasks WHERE id = ?", (key,)).fetchone() is None:
                         raise _error(source, line, "unknown task ID")
-                    db.execute("INSERT INTO results VALUES (?, ?, ?)", (source, key, _canonical(record)))
+                    payload = _canonical(record)
+                    db.execute("INSERT INTO results VALUES (?, ?, ?)", (source, key, payload))
+                if count:
+                    digest.update(b",")
+                digest.update(payload.encode("ascii"))
             except sqlite3.IntegrityError as error:
                 raise _error(source, line, "duplicate task ID") from error
             except (ValueError, RecursionError) as error:
@@ -127,8 +140,7 @@ def _ingest(db: sqlite3.Connection, path: str | Path, kind: str, limit: int,
 
 @contextmanager
 def _storage(max_record_bytes: int, temporary_directory: str | Path | None) -> Iterator[sqlite3.Connection]:
-    if type(max_record_bytes) is not int or not 1 <= max_record_bytes < sys.maxsize:
-        raise ContractError("max_record_bytes must be a positive integer below sys.maxsize")
+    _byte_limit(max_record_bytes, "max_record_bytes")
     try:
         with tempfile.TemporaryDirectory(prefix="weasley-jsonl-", dir=temporary_directory) as directory:
             db = sqlite3.connect(Path(directory) / "evaluation.sqlite3")
@@ -144,6 +156,56 @@ def _storage(max_record_bytes: int, temporary_directory: str | Path | None) -> I
                 db.close()
     except (OSError, sqlite3.Error) as error:
         raise ContractError("JSONL evaluation temporary storage failure") from error
+
+
+def _byte_limit(value: int, name: str) -> None:
+    if type(value) is not int or not 1 <= value < sys.maxsize:
+        raise ContractError(f"{name} must be a positive integer below sys.maxsize")
+
+
+def _load_sidecar(path: str | Path, limit: int) -> dict:
+    _byte_limit(limit, "max_sidecar_bytes")
+    try:
+        with Path(path).open("rb") as stream:
+            # A permissive configured limit must not allocate that limit up front.
+            raw = bytearray()
+            while len(raw) <= limit:
+                chunk = stream.read(min(64 * 1024, limit + 1 - len(raw)))
+                if not chunk:
+                    break
+                raw.extend(chunk)
+    except (OSError, ValueError) as error:
+        raise ContractError("provenance: cannot read input") from error
+    if len(raw) > limit:
+        raise ContractError("provenance: document exceeds max_sidecar_bytes")
+    try:
+        return json.loads(raw.decode("utf-8"), object_pairs_hook=_pairs, parse_constant=_constant)
+    except (ValueError, UnicodeError, RecursionError) as error:
+        raise ContractError("provenance: invalid UTF-8 JSON document") from error
+
+
+def verify_provenance_jsonl(suite_path: str | Path, run_path: str | Path,
+                            provenance_path: str | Path, *,
+                            expected_runner_revision: str | None = None,
+                            max_record_bytes: int = DEFAULT_MAX_RECORD_BYTES,
+                            max_sidecar_bytes: int = DEFAULT_MAX_SIDECAR_BYTES,
+                            temporary_directory: str | Path | None = None) -> dict:
+    """Verify an unsigned v1 sidecar against fully validated JSONL artifact files.
+
+    Hash the equivalent canonical v1 documents, not raw transport bytes. Only
+    explicit caller paths are opened; sidecars contain no file/URL references.
+    Memory is bounded by record/sidecar limits and the SQLite cache; disk grows
+    with input size. A consistent partial or failed run is not a successful run.
+    """
+    _byte_limit(max_record_bytes, "max_record_bytes")
+    provenance = _load_sidecar(provenance_path, max_sidecar_bytes)
+    _validate_provenance(provenance, expected_runner_revision)
+    with _storage(max_record_bytes, temporary_directory) as db:
+        suite, _, suite_digest = _ingest(db, suite_path, "suite", max_record_bytes)
+        run, _, run_digest = _ingest(db, run_path, "run", max_record_bytes, suite["suite_id"])
+        report = _verification_report(provenance, suite["suite_id"], run["run_id"],
+                                      suite_digest, run_digest, expected_runner_revision)
+    return report
 
 
 def _report_events(db: sqlite3.Connection, field: str) -> Iterator[dict]:

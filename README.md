@@ -159,6 +159,12 @@ unchanged. See [provenance sidecars](docs/provenance.md) for CLI/API examples,
 memory-export support, canonicalization, and the trust boundary. Unsigned
 digests establish consistency, not authenticity or proof of execution.
 
+For JSONL files, `verify-provenance-jsonl suite.jsonl run.jsonl run.provenance.json`
+checks the same sidecar while bounding records and using temporary disk indexes.
+It recomputes both canonical digests before reporting success. See
+[JSONL provenance verification](docs/jsonl-provenance.md) for byte conventions,
+file/resource boundaries, and the distinction between consistency and coverage.
+
 ```python
 from weasley_agent_bench import evaluate, load_document
 
@@ -185,7 +191,7 @@ assertion paths are present, so use synthetic or appropriately reviewed inputs.
 | `1` | A task failed evaluation or a comparison found a regression. |
 | `2` | Invalid input or command usage; input errors are JSON on stderr. |
 
-`create-provenance` and `verify-provenance` exit 0 on successful creation or
+`create-provenance`, `verify-provenance`, and `verify-provenance-jsonl` exit 0 on successful creation or
 consistency verification, and 2 on invalid input or a mismatch. Verification
 does not grade task success; a consistent failed run still needs evaluation.
 

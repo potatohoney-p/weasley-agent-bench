@@ -51,7 +51,15 @@
   expose memory/disk/time tradeoffs. This extends research capability without
   establishing real-workload adoption.
 
-Tests, examples, documentation, and packaging support those eight outcomes. They
+- **Bounded JSONL provenance verification:** recompute canonical suite/run hashes
+  from fully validated JSONL files against the existing unsigned v1 sidecar.
+  Acceptance: whole-document independent hash oracles and legacy reports agree;
+  mutations, duplicate identities, malformed paths, incomplete evidence and late
+  framing failures emit no success; failed or incomplete valid runs retain their
+  original meaning. Explicit file/sidecar bounds support offline checks without
+  claiming historical execution authenticity or real-workload adoption.
+
+Tests, examples, documentation, and packaging support those nine outcomes. They
 are not additional work units.
 
 ## Next, in priority order
