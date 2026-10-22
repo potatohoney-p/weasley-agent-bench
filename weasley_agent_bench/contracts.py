@@ -121,49 +121,53 @@ def validate_suite(suite: Any) -> None:
     ids: set[str] = set()
     for index, task in enumerate(suite["tasks"]):
         path = f"suite.tasks[{index}]"
-        _object(task, path, {"id", "prompt", "expect"}, {"tags", "budget"})
-        _string(task["id"], f"{path}.id")
-        _string(task["prompt"], f"{path}.prompt")
+        _validate_task(task, path)
         if task["id"] in ids:
             _fail(f"{path}.id", "duplicate task ID")
         ids.add(task["id"])
-        if "tags" in task:
-            _unique_strings(task["tags"], f"{path}.tags")
-        expect = task["expect"]
-        _object(expect, f"{path}.expect", set(), {"final", "tools", "forbidden_tools"})
-        if "final" in expect:
-            _assertions(expect["final"], f"{path}.expect.final")
-        if "forbidden_tools" in expect:
-            _unique_strings(expect["forbidden_tools"], f"{path}.expect.forbidden_tools")
-        if "tools" in expect:
-            tools = expect["tools"]
-            _object(tools, f"{path}.expect.tools", {"mode", "steps"})
-            if tools["mode"] not in ("exact", "subsequence"):
-                _fail(f"{path}.expect.tools.mode", "expected exact or subsequence")
-            _array(tools["steps"], f"{path}.expect.tools.steps")
-            for position, step in enumerate(tools["steps"]):
-                location = f"{path}.expect.tools.steps[{position}]"
-                _object(step, location, {"name", "outcome"}, {"arguments", "output"})
-                _string(step["name"], f"{location}.name")
-                if step["outcome"] not in ("success", "error", "any"):
-                    _fail(f"{location}.outcome", "expected success, error or any")
-                for field in ("arguments", "output"):
-                    if field in step:
-                        _assertions(step[field], f"{location}.{field}")
-                if step["name"] in expect.get("forbidden_tools", []):
-                    _fail(location, "a required tool is also forbidden")
-        has_tool_contract = "tools" in expect and (
-            expect["tools"]["mode"] == "exact" or bool(expect["tools"]["steps"])
-        )
-        if not (expect.get("final") or expect.get("forbidden_tools") or has_tool_contract):
-            _fail(f"{path}.expect", "at least one meaningful expectation is required")
-        if "budget" in task:
-            _object(task["budget"], f"{path}.budget", set(), set(BUDGET_FIELDS))
-            if not task["budget"]:
-                _fail(f"{path}.budget", "must not be empty")
-            for field, limit in task["budget"].items():
-                _number(limit, f"{path}.budget.{field}", integer=field != "max_duration_ms",
-                        maximum=MAX_DURATION_MS if field == "max_duration_ms" else None)
+
+
+def _validate_task(task: Any, path: str) -> None:
+    _object(task, path, {"id", "prompt", "expect"}, {"tags", "budget"})
+    _string(task["id"], f"{path}.id")
+    _string(task["prompt"], f"{path}.prompt")
+    if "tags" in task:
+        _unique_strings(task["tags"], f"{path}.tags")
+    expect = task["expect"]
+    _object(expect, f"{path}.expect", set(), {"final", "tools", "forbidden_tools"})
+    if "final" in expect:
+        _assertions(expect["final"], f"{path}.expect.final")
+    if "forbidden_tools" in expect:
+        _unique_strings(expect["forbidden_tools"], f"{path}.expect.forbidden_tools")
+    if "tools" in expect:
+        tools = expect["tools"]
+        _object(tools, f"{path}.expect.tools", {"mode", "steps"})
+        if tools["mode"] not in ("exact", "subsequence"):
+            _fail(f"{path}.expect.tools.mode", "expected exact or subsequence")
+        _array(tools["steps"], f"{path}.expect.tools.steps")
+        for position, step in enumerate(tools["steps"]):
+            location = f"{path}.expect.tools.steps[{position}]"
+            _object(step, location, {"name", "outcome"}, {"arguments", "output"})
+            _string(step["name"], f"{location}.name")
+            if step["outcome"] not in ("success", "error", "any"):
+                _fail(f"{location}.outcome", "expected success, error or any")
+            for field in ("arguments", "output"):
+                if field in step:
+                    _assertions(step[field], f"{location}.{field}")
+            if step["name"] in expect.get("forbidden_tools", []):
+                _fail(location, "a required tool is also forbidden")
+    has_tool_contract = "tools" in expect and (
+        expect["tools"]["mode"] == "exact" or bool(expect["tools"]["steps"])
+    )
+    if not (expect.get("final") or expect.get("forbidden_tools") or has_tool_contract):
+        _fail(f"{path}.expect", "at least one meaningful expectation is required")
+    if "budget" in task:
+        _object(task["budget"], f"{path}.budget", set(), set(BUDGET_FIELDS))
+        if not task["budget"]:
+            _fail(f"{path}.budget", "must not be empty")
+        for field, limit in task["budget"].items():
+            _number(limit, f"{path}.budget.{field}", integer=field != "max_duration_ms",
+                    maximum=MAX_DURATION_MS if field == "max_duration_ms" else None)
 
 
 def validate_run(run: Any, suite: dict) -> None:
@@ -179,32 +183,36 @@ def validate_run(run: Any, suite: dict) -> None:
     seen: set[str] = set()
     for index, result in enumerate(run["results"]):
         path = f"run.results[{index}]"
-        _object(result, path, {"task_id", "status", "final", "tool_calls"}, {"usage"})
-        _string(result["task_id"], f"{path}.task_id")
+        _validate_result(result, path)
         if result["task_id"] not in known_ids:
             _fail(f"{path}.task_id", "unknown task ID")
         if result["task_id"] in seen:
             _fail(f"{path}.task_id", "duplicate result for task ID")
         seen.add(result["task_id"])
-        if result["status"] not in ("completed", "error", "cancelled"):
-            _fail(f"{path}.status", "expected completed, error or cancelled")
-        _json_value(result["final"], f"{path}.final")
-        _array(result["tool_calls"], f"{path}.tool_calls")
-        for position, call in enumerate(result["tool_calls"]):
-            location = f"{path}.tool_calls[{position}]"
-            _object(call, location, {"name", "arguments", "outcome", "output"})
-            _string(call["name"], f"{location}.name")
-            if not isinstance(call["arguments"], dict):
-                _fail(f"{location}.arguments", "expected an object")
-            _json_value(call["arguments"], f"{location}.arguments")
-            _json_value(call["output"], f"{location}.output")
-            if call["outcome"] not in ("success", "error"):
-                _fail(f"{location}.outcome", "expected success or error")
-        if "usage" in result:
-            _object(result["usage"], f"{path}.usage", set(), set(USAGE_FIELDS))
-            for field, value in result["usage"].items():
-                _number(value, f"{path}.usage.{field}", integer=field != "duration_ms",
-                        maximum=MAX_DURATION_MS if field == "duration_ms" else None)
+
+
+def _validate_result(result: Any, path: str) -> None:
+    _object(result, path, {"task_id", "status", "final", "tool_calls"}, {"usage"})
+    _string(result["task_id"], f"{path}.task_id")
+    if result["status"] not in ("completed", "error", "cancelled"):
+        _fail(f"{path}.status", "expected completed, error or cancelled")
+    _json_value(result["final"], f"{path}.final")
+    _array(result["tool_calls"], f"{path}.tool_calls")
+    for position, call in enumerate(result["tool_calls"]):
+        location = f"{path}.tool_calls[{position}]"
+        _object(call, location, {"name", "arguments", "outcome", "output"})
+        _string(call["name"], f"{location}.name")
+        if not isinstance(call["arguments"], dict):
+            _fail(f"{location}.arguments", "expected an object")
+        _json_value(call["arguments"], f"{location}.arguments")
+        _json_value(call["output"], f"{location}.output")
+        if call["outcome"] not in ("success", "error"):
+            _fail(f"{location}.outcome", "expected success or error")
+    if "usage" in result:
+        _object(result["usage"], f"{path}.usage", set(), set(USAGE_FIELDS))
+        for field, value in result["usage"].items():
+            _number(value, f"{path}.usage.{field}", integer=field != "duration_ms",
+                    maximum=MAX_DURATION_MS if field == "duration_ms" else None)
 
 
 def _pairs(pairs: list[tuple[str, Any]]) -> dict:

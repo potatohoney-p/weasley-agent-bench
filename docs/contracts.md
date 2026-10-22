@@ -186,3 +186,16 @@ supported foreground artifact subset documented in [subagents-export.md](subagen
 It preserves saved text rather than parsing JSON-looking output, rejects
 incomplete recorded tool lifecycles, and omits uncertain usage. The output is an
 ordinary version-1 run, so all existing validation and missing-task rules apply.
+
+## Bounded JSONL transport
+
+The opt-in `evaluate-jsonl` command accepts separately versioned suite/run JSONL
+files with strict metadata headers, existing v1 task/result objects, and required
+end markers with exact record counts. Records are bounded (default 1 MiB including
+newline bytes); errors identify source and physical line. Both inputs and scores
+are validated before any report is emitted. Disk-backed indexes preserve arbitrary
+run order, duplicate/unknown-ID rejection, suite-order rows, explicit missing
+failures, and the exact existing canonical suite digest. Output consists of a
+header, one result event per task, and a required completion summary. Consumers
+must reject partial output without that summary. Legacy JSON contracts and
+scoring are unchanged. See [the protocol and resource bounds](jsonl-evaluation.md).

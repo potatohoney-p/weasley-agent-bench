@@ -36,7 +36,14 @@
   schemas still fail, and legacy scoring outputs remain unchanged. This is
   not a general satisfiability or resource-cost model.
 
-Tests, examples, documentation, and packaging support those six outcomes. They
+- **Bounded JSONL evaluation:** opt-in suite/run ingestion uses bounded physical
+  records and temporary disk indexes, retaining arbitrary run order and missing
+  coverage. Acceptance: equivalent artifacts reproduce every legacy score row
+  and canonical suite digest; malformed late records produce no report; a
+  deterministic synthetic scaling harness measures memory and disk growth in
+  fresh processes. This is engineering evidence, not observed real-workload demand.
+
+Tests, examples, documentation, and packaging support those seven outcomes. They
 are not additional work units.
 
 ## Next, in priority order
@@ -48,10 +55,11 @@ are not additional work units.
    parity, not a recorded real run. Remaining acceptance: a consented sanitized
    real-run artifact must validate without guessing omitted fields. No live
    provider execution or private session ingestion is enabled by this adapter.
-2. **Scalable suite ingestion.** Add bounded JSONL input and incremental reporting
-   if real suite sizes justify it. Acceptance: a deterministic large fixture
-   matches the current in-memory score with documented memory bounds and line
-   numbers for malformed records.
+2. **Real-workload adoption of scalable ingestion.** The opt-in JSONL path has
+   synthetic parity and scaling coverage with documented bounds and line-numbered
+   errors. The original condition, that real suite sizes justify adoption, remains
+   unvalidated. Use consented workload measurements before extending JSONL support
+   to paired/repeated analysis or changing default ingestion.
 
 ## Publication status
 

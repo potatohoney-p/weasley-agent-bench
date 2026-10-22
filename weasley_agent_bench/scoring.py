@@ -90,37 +90,39 @@ def _tool_checks(calls: list, contract: dict) -> list[dict]:
     return checks
 
 
+def _evaluate_task(task: dict, result: dict | None) -> dict:
+    """Score one validated task/result pair; shared by both input transports."""
+    checks = [_check("result.present", result is not None, "a result was supplied for this task")]
+    if result is not None:
+        checks.append(_check("result.completed", result["status"] == "completed", "agent completed the task"))
+        expected = task["expect"]
+        checks.extend(_assertion_checks(result["final"], expected.get("final", []), "final"))
+        calls = result["tool_calls"]
+        if "tools" in expected:
+            checks.extend(_tool_checks(calls, expected["tools"]))
+        forbidden = set(expected.get("forbidden_tools", []))
+        if forbidden:
+            checks.append(_check("tools.forbidden", not any(call["name"] in forbidden for call in calls),
+                                 "no forbidden tool was called"))
+        for limit_name, limit in sorted(task.get("budget", {}).items()):
+            metric = limit_name.removeprefix("max_")
+            observed = len(calls) if metric == "tool_calls" else result.get("usage", {}).get(metric)
+            checks.append(_check(f"budget.{metric}", observed is not None and observed <= limit,
+                                 "usage is present and within the configured cap"))
+    return {
+        "task_id": task["id"],
+        "status": result["status"] if result else "missing",
+        "passed": all(check["passed"] for check in checks),
+        "checks": checks,
+    }
+
+
 def evaluate(suite: dict, run: dict) -> dict:
     """Score every suite task in suite order, including absent results as failures."""
     validate_suite(suite)
     validate_run(run, suite)
     by_id = {result["task_id"]: result for result in run["results"]}
-    rows: list[dict] = []
-    for task in suite["tasks"]:
-        result = by_id.get(task["id"])
-        checks = [_check("result.present", result is not None, "a result was supplied for this task")]
-        if result is not None:
-            checks.append(_check("result.completed", result["status"] == "completed", "agent completed the task"))
-            expected = task["expect"]
-            checks.extend(_assertion_checks(result["final"], expected.get("final", []), "final"))
-            calls = result["tool_calls"]
-            if "tools" in expected:
-                checks.extend(_tool_checks(calls, expected["tools"]))
-            forbidden = set(expected.get("forbidden_tools", []))
-            if forbidden:
-                checks.append(_check("tools.forbidden", not any(call["name"] in forbidden for call in calls),
-                                     "no forbidden tool was called"))
-            for limit_name, limit in sorted(task.get("budget", {}).items()):
-                metric = limit_name.removeprefix("max_")
-                observed = len(calls) if metric == "tool_calls" else result.get("usage", {}).get(metric)
-                checks.append(_check(f"budget.{metric}", observed is not None and observed <= limit,
-                                     "usage is present and within the configured cap"))
-        rows.append({
-            "task_id": task["id"],
-            "status": result["status"] if result else "missing",
-            "passed": all(check["passed"] for check in checks),
-            "checks": checks,
-        })
+    rows = [_evaluate_task(task, by_id.get(task["id"])) for task in suite["tasks"]]
     passed = sum(row["passed"] for row in rows)
     return {
         "schema_version": 1,
