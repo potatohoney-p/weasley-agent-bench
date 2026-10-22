@@ -40,6 +40,16 @@ It preserves the same scores, suite digest, and missing-task failures. A termina
 summary marks a complete report. See [JSONL input, output, resource bounds, and
 synthetic scaling measurements](docs/jsonl-evaluation.md).
 
+The same bounded input format also supports a paired regression gate:
+
+```bash
+python -m weasley_agent_bench compare-jsonl examples/jsonl/suite.jsonl examples/jsonl/baseline.jsonl examples/jsonl/candidate.jsonl
+```
+
+Both runs must cover every task. Exit 0 means no regressions; unchanged candidate
+failures can still remain. See [paired JSONL semantics, completion rules, and
+resource measurements](docs/jsonl-comparison.md).
+
 | Task | Baseline | Candidate | Contract exercised |
 | --- | --- | --- | --- |
 | corrected-memory | Fail | Pass | Current Korean fact, evidence ID, recall result, token cap |

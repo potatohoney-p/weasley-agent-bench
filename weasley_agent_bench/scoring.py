@@ -136,6 +136,24 @@ def evaluate(suite: dict, run: dict) -> dict:
     }
 
 
+def _compare_rows(old: dict, new: dict, old_usage: dict, new_usage: dict) -> dict:
+    """Compare a complete, validated task pair using either input transport."""
+    change = "unchanged"
+    if old["passed"] and not new["passed"]:
+        change = "regression"
+    elif not old["passed"] and new["passed"]:
+        change = "improvement"
+    return {
+        "task_id": old["task_id"],
+        "change": change,
+        "baseline_passed": old["passed"],
+        "candidate_passed": new["passed"],
+        "usage_delta": {key: new_usage[key] - old_usage[key] for key in USAGE_FIELDS
+                        if key in old_usage and key in new_usage},
+        "failed_checks": [check["code"] for check in new["checks"] if not check["passed"]],
+    }
+
+
 def compare(suite: dict, baseline: dict, candidate: dict) -> dict:
     """Compare paired tasks, rejecting incomplete coverage rather than dropping it."""
     before = evaluate(suite, baseline)
@@ -147,22 +165,9 @@ def compare(suite: dict, baseline: dict, candidate: dict) -> dict:
     changes: list[dict] = []
     for old, new in zip(before["results"], after["results"]):
         task_id = old["task_id"]
-        change = "unchanged"
-        if old["passed"] and not new["passed"]:
-            change = "regression"
-        elif not old["passed"] and new["passed"]:
-            change = "improvement"
         old_usage = old_results[task_id].get("usage", {})
         new_usage = new_results[task_id].get("usage", {})
-        changes.append({
-            "task_id": task_id,
-            "change": change,
-            "baseline_passed": old["passed"],
-            "candidate_passed": new["passed"],
-            "usage_delta": {key: new_usage[key] - old_usage[key] for key in USAGE_FIELDS
-                            if key in old_usage and key in new_usage},
-            "failed_checks": [check["code"] for check in new["checks"] if not check["passed"]],
-        })
+        changes.append(_compare_rows(old, new, old_usage, new_usage))
     regressions = sum(item["change"] == "regression" for item in changes)
     return {
         "schema_version": 1,

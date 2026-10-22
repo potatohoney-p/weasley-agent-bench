@@ -8,7 +8,7 @@ import sys
 
 from .contracts import ContractError, load_document
 from .scoring import compare, evaluate
-from .jsonl import DEFAULT_MAX_RECORD_BYTES, evaluate_jsonl
+from .jsonl import DEFAULT_MAX_RECORD_BYTES, compare_jsonl, evaluate_jsonl
 from .repeated import compare_repeated
 from .provenance import create_provenance, verify_provenance
 from .linting import lint_suite
@@ -34,6 +34,12 @@ def main(argv: list[str] | None = None) -> int:
     diff.add_argument("suite")
     diff.add_argument("baseline")
     diff.add_argument("candidate")
+    paired_stream = sub.add_parser("compare-jsonl", help="compare complete JSONL runs using temporary disk storage")
+    paired_stream.add_argument("suite")
+    paired_stream.add_argument("baseline")
+    paired_stream.add_argument("candidate")
+    paired_stream.add_argument("--max-record-bytes", type=int, default=DEFAULT_MAX_RECORD_BYTES)
+    paired_stream.add_argument("--temporary-directory", help="parent directory for temporary comparison storage")
     repeated = sub.add_parser("compare-repeated", help="describe paired trials on a fixed task suite")
     repeated.add_argument("suite")
     repeated.add_argument("baseline")
@@ -57,6 +63,12 @@ def main(argv: list[str] | None = None) -> int:
     export.add_argument("--run-id", required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == "compare-jsonl":
+            for event in compare_jsonl(args.suite, args.baseline, args.candidate,
+                                       max_record_bytes=args.max_record_bytes,
+                                       temporary_directory=args.temporary_directory):
+                print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
+            return 0 if event["no_regressions"] else 1
         if args.command == "evaluate-jsonl":
             for event in evaluate_jsonl(args.suite, args.run, max_record_bytes=args.max_record_bytes,
                                         temporary_directory=args.temporary_directory):
