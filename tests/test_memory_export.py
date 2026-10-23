@@ -10,10 +10,55 @@ import unittest
 from unittest.mock import patch
 
 from experiments.memory_horizon import export, main, run_experiment
-from weasley_agent_bench import evaluate, load_document, verify_provenance
+from weasley_agent_bench import ContractError, evaluate, load_document, verify_provenance
 
 
 class MemoryExportTests(unittest.TestCase):
+    def test_reserved_artifact_names_are_rejected_before_any_write(self):
+        report, suite, runs, episodes = run_experiment()
+        for name in ('report', 'suite', 'episodes', 'REPORT', 'Suite'):
+            for revision in (None, 'synthetic-r1'):
+                with self.subTest(name=name, revision=revision), tempfile.TemporaryDirectory() as temporary:
+                    directory = Path(temporary) / 'export'
+                    with self.assertRaisesRegex(ContractError, 'filenames.*unique'):
+                        export(directory, report, suite, {name: runs['latest-record']}, episodes,
+                               runner_revision=revision)
+                    self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_run_and_sidecar_names_cannot_alias_case_insensitively(self):
+        report, suite, runs, episodes = run_experiment()
+        for names, revision in [(('baseline', 'BASELINE'), None),
+                                (('baseline', 'BASELINE.provenance'), 'synthetic-r1')]:
+            with self.subTest(names=names), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary) / 'export'
+                with self.assertRaisesRegex(ContractError, 'filenames.*unique'):
+                    export(directory, report, suite, {name: runs['latest-record'] for name in names},
+                           episodes, runner_revision=revision)
+                self.assertFalse(directory.exists())
+
+    def test_run_names_cannot_escape_the_artifact_directory(self):
+        report, suite, runs, episodes = run_experiment()
+        names = ('../escaped', r'..\escaped', '/absolute', r'C:\outside',
+                 '', '.', '..', 'nul\x00name', 7)
+        for name in names:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary) / 'export'
+                with self.assertRaisesRegex(ContractError, 'filename stems'):
+                    export(directory, report, suite, {name: runs['latest-record']}, episodes)
+                self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_valid_custom_stem_preserves_exported_evidence(self):
+        report, suite, runs, episodes = run_experiment()
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / 'export'
+            export(directory, report, suite, {'model.v2_candidate-1': runs['latest-record']}, episodes,
+                   runner_revision='synthetic-r1')
+            self.assertEqual(load_document(directory / 'report.json'), report)
+            run = load_document(directory / 'model.v2_candidate-1.json')
+            self.assertEqual(run, runs['latest-record'])
+            self.assertTrue(verify_provenance(suite, run,
+                load_document(directory / 'model.v2_candidate-1.provenance.json'))['consistent'])
+
     def test_artifact_created_after_preflight_is_preserved(self):
         artifacts = run_experiment()
         sentinel = b'{"synthetic_competing_evidence": true}\n'
