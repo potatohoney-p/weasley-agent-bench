@@ -94,3 +94,15 @@ A useful next increment is a reviewed exporter from a real agent runtime using
 the same held-out contracts and cutoff discipline, then a larger suite with
 ambiguous aliases, retrieval distractors, and repeated trials. That work should
 report both errors and resource measurements before making model comparisons.
+
+### Export artifact namespace
+
+The Python `export` helper accepts run labels as ASCII filename stems: an initial
+letter or digit followed by letters, digits, `.`, `_`, or `-`. Labels are not
+paths. All generated filenames, including `report.json`, `suite.json`,
+`episodes.json`, runs and optional provenance sidecars, must be unique ignoring
+case. This rule also applies without provenance, and prevents an export prepared
+on a case-sensitive host from aliasing its own evidence on another host. Invalid
+names and collisions raise `ContractError` before creating the output directory
+or writing any artifact. This preflight does not promise transactional rollback
+on later I/O failure; exclusive file creation still protects existing evidence.

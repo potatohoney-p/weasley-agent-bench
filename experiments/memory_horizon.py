@@ -9,6 +9,7 @@ import json
 import math
 from pathlib import Path
 import platform
+import re
 import statistics
 import time
 
@@ -198,6 +199,11 @@ def export(
     directory: Path, report: dict, suite: dict, runs: dict, episodes: list,
     *, runner_revision: str | None = None,
 ) -> None:
+    # Run labels are artifact names, not paths. Validate the whole namespace
+    # before any directory or file is created, on every host platform.
+    for name in runs:
+        if not isinstance(name, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name) is None:
+            raise ContractError("export: run names must be ASCII filename stems, not paths")
     artifacts = [("report.json", report), ("suite.json", suite), ("episodes.json", episodes),
                  *((f"{name}.json", run) for name, run in runs.items())]
     if runner_revision is not None:
@@ -205,8 +211,8 @@ def export(
             (f"{name}.provenance.json", create_provenance(suite, run, runner_revision=runner_revision))
             for name, run in runs.items()
         )
-        if len({name for name, _ in artifacts}) != len(artifacts):
-            raise ContractError("export: generated artifact filenames must be unique")
+    if len({name.casefold() for name, _ in artifacts}) != len(artifacts):
+        raise ContractError("export: generated artifact filenames must be unique ignoring case")
     files = dict(artifacts)
     if any((directory / name).exists() for name in files):
         raise FileExistsError("export would overwrite an existing artifact; choose a fresh directory")
