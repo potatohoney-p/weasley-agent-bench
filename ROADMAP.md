@@ -94,3 +94,12 @@ Private publication is intended, with a minimal README base and implementation
 reviewed through a Draft PR. The coordinator clarified that minimal bootstrap of
 this newly authorized private repository is allowed; existing repositories'
 default branches remain protected. No public publication is authorized.
+
+## JSONL report completion lifecycle
+
+The evaluation, paired-comparison and repeated-analysis streams release scratch
+before publishing their terminal completion event. Acceptance: stopping exactly
+at completion leaves no open database or scratch directory; close/removal faults
+cannot publish completion; early close and CLI output failures release resources
+or preserve cleanup errors. Scores and successful streams remain unchanged.
+This is local output/resource integrity, not real-run validation or adoption.

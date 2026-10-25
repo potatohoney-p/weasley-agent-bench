@@ -228,3 +228,26 @@ digest, missing-coverage rejection and conditional statistical interpretation.
 All analysis completes before output, followed by trial/task events and a required
 terminal summary/interval. Exit 0 means valid descriptive analysis. See
 [the complete batch and output contract](jsonl-repeated.md).
+
+### JSONL completion and resource release
+
+`evaluate_jsonl`, `compare_jsonl` and `compare_repeated_jsonl` emit their final
+`complete: true` event only after closing the scratch database and successfully
+exiting its temporary-directory context. A consumer may stop at that event
+without an extra `next()`, `close()` or garbage collection to release scratch.
+Before that event, consumers must exhaust or explicitly close the iterator.
+
+Storage close/removal errors remain `ContractError`s; already-emitted headers
+and rows can remain visible, but no completion event is emitted. The CLI returns
+2 for these storage errors. Its streaming commands explicitly close iterators
+on output failures as well, including when another caller retains a reference.
+Output failures are not converted into a successful report. This is not atomic
+stdout publication, an fsync/durability guarantee, rollback of emitted bytes, or
+proof that a downstream sink accepted/flushed the terminal event. CLI consumers
+must check both the expected terminal event and the process exit status; scoring
+exit 1 still denotes a complete negative evaluation/comparison, not broken I/O.
+Cleanup failure may leave filesystem artifacts; it is never silently suppressed.
+
+The wire events, scores, ordering, provenance and successful exit-code policy
+are unchanged. Only scratch lifetime and completion/error ordering change. Tests
+use synthetic inputs and injected local storage/output faults, not real runs.

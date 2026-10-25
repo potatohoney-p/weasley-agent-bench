@@ -192,4 +192,5 @@ def compare_repeated_jsonl(suite_path: str | Path, baseline_path: str | Path, ca
             with closing(db.execute(f"SELECT payload FROM {table} ORDER BY ordinal")) as rows:
                 for (payload,) in rows:
                     yield {field: json.loads(payload)}
-        yield {"complete": True, "summary": summary, "interval": interval}
+    # Publish completion only after storage close and directory cleanup succeed.
+    yield {"complete": True, "summary": summary, "interval": interval}

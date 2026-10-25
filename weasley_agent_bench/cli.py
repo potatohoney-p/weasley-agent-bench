@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from contextlib import closing
+
 import argparse
 import json
 import sys
@@ -84,11 +86,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "compare-repeated-jsonl":
-            for event in compare_repeated_jsonl(
+            with closing(compare_repeated_jsonl(
                 args.suite, args.baseline, args.candidate, seed=args.seed, resamples=args.resamples,
                 max_record_bytes=args.max_record_bytes, temporary_directory=args.temporary_directory,
-            ):
-                print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
+            )) as events:
+                for event in events:
+                    print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
             return 0
         if args.command == "verify-provenance-jsonl":
             report = verify_provenance_jsonl(
@@ -100,15 +103,17 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report, sort_keys=True, ensure_ascii=True, indent=2, allow_nan=False))
             return 0
         if args.command == "compare-jsonl":
-            for event in compare_jsonl(args.suite, args.baseline, args.candidate,
+            with closing(compare_jsonl(args.suite, args.baseline, args.candidate,
                                        max_record_bytes=args.max_record_bytes,
-                                       temporary_directory=args.temporary_directory):
-                print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
+                                       temporary_directory=args.temporary_directory)) as events:
+                for event in events:
+                    print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
             return 0 if event["no_regressions"] else 1
         if args.command == "evaluate-jsonl":
-            for event in evaluate_jsonl(args.suite, args.run, max_record_bytes=args.max_record_bytes,
-                                        temporary_directory=args.temporary_directory):
-                print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
+            with closing(evaluate_jsonl(args.suite, args.run, max_record_bytes=args.max_record_bytes,
+                                        temporary_directory=args.temporary_directory)) as events:
+                for event in events:
+                    print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
             return 0 if event["passed"] else 1
         suite = load_document(args.suite)
         if args.command == "export-subagents":

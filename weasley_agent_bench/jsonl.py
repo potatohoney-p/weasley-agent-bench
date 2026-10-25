@@ -222,7 +222,8 @@ def evaluate_jsonl(suite_path: str | Path, run_path: str | Path, *,
     Input records (including newline bytes) are bounded by max_record_bytes.
     Temporary disk grows with inputs and reports; SQLite's page cache is 2 MiB.
     Consume the iterator completely, or close it, to release temporary storage.
-    Only the terminal complete=true event establishes a complete report.
+    Only the terminal complete=true event, emitted after scratch cleanup,
+    establishes a complete report.
     """
     with _storage(max_record_bytes, temporary_directory) as db:
         suite, total, digest = _ingest(db, suite_path, "suite", max_record_bytes)
@@ -247,9 +248,9 @@ def evaluate_jsonl(suite_path: str | Path, run_path: str | Path, *,
                "schema_version": 1, "suite_id": suite["suite_id"],
                "suite_sha256": digest, "run_id": run["run_id"]}
         yield from _report_events(db, "result")
-        yield {"complete": True, "passed": passed == total,
-               "summary": {"total": total, "passed": passed, "failed": total - passed,
-                           "missing": total - observed}}
+    yield {"complete": True, "passed": passed == total,
+           "summary": {"total": total, "passed": passed, "failed": total - passed,
+                       "missing": total - observed}}
 
 
 def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_path: str | Path, *,
@@ -259,7 +260,8 @@ def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_p
 
     The inputs use the existing suite/run JSONL formats. Output changes follow
     suite order, with the same semantics as compare(). Only the terminal complete
-    summary establishes a complete report. Consume or close the iterator.
+    summary, emitted after scratch cleanup, establishes a complete report.
+    Consume or close the iterator before that event.
     """
     with _storage(max_record_bytes, temporary_directory) as db:
         suite, total, digest = _ingest(db, suite_path, "suite", max_record_bytes)
@@ -296,5 +298,5 @@ def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_p
                "schema_version": 1, "suite_id": suite["suite_id"], "suite_sha256": digest,
                "baseline_run_id": baseline["run_id"], "candidate_run_id": candidate["run_id"]}
         yield from _report_events(db, "change")
-        yield {"complete": True, "no_regressions": summary["regressions"] == 0,
-               "candidate_passed": summary["candidate_passed"] == total, "summary": summary}
+    yield {"complete": True, "no_regressions": summary["regressions"] == 0,
+           "candidate_passed": summary["candidate_passed"] == total, "summary": summary}
