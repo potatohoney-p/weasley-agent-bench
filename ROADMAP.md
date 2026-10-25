@@ -59,3 +59,13 @@ Private publication is intended, with a minimal README base and implementation
 reviewed through a Draft PR. The coordinator clarified that minimal bootstrap of
 this newly authorized private repository is allowed; existing repositories'
 default branches remain protected. No public publication is authorized.
+
+## Additional offline preflight capability
+
+- **Opt-in equality-assertion consistency:** detect provable conflicts between
+  complete ancestor values and descendant JSON-Pointer equalities within each
+  final/tool assertion list. Acceptance: preserve default lint and scoring,
+  distinguish null/missing and booleans/numbers, honor escaped/array pointers,
+  retain intentional-negative allowance and validate a finite synthetic grid
+  against the evaluator. This is not a general satisfiability solver and does
+  not complete the real-run validation or adoption milestones above.

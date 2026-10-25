@@ -186,3 +186,12 @@ supported foreground artifact subset documented in [subagents-export.md](subagen
 It preserves saved text rather than parsing JSON-looking output, rejects
 incomplete recorded tool lifecycles, and omits uncertain usage. The output is an
 ordinary version-1 run, so all existing validation and missing-task rules apply.
+
+### Optional equality-consistency preflight
+
+`lint_suite(..., check_assertions=True)` and `lint-suite --check-assertions`
+select `tool-budget-and-assertions-v1`. In addition to the existing budget rule,
+this detects a known complete ancestor equality that cannot satisfy a descendant
+equality within the same assertion list. Default lint reports, evaluation,
+comparison, provenance and input schema version 1 are unchanged. Intentional
+negative contracts remain evaluable. See [the exact rule and limits](contract-lint.md#opt-in-ancestor-equality-checks).

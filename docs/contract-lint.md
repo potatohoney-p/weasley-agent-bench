@@ -74,3 +74,49 @@ allow mode, schema failures, CLI exit behavior, input immutability and legacy
 evaluation. An exhaustive small synthetic grid checks the lint rule against
 the independently implemented evaluator over possible call counts. These are
 contract-logic tests, not estimates of real-world issue-detection rates.
+
+## Opt-in ancestor equality checks
+
+Use `lint-suite SUITE --check-assertions`, or
+`lint_suite(suite, check_assertions=True)`, to select the combined
+`tool-budget-and-assertions-v1` rule set. Without this flag the existing
+`tool-budget-v1` report and behavior are unchanged. The Python option requires
+an actual boolean, not a truthy value.
+
+For example, a final assertion fixing the whole root to `{"a": 1}` conflicts
+with an assertion requiring `/a` to equal `2`. No result can satisfy both. A
+root fixing `{"a": 1}` and `/a` requiring `1.0` is compatible under the existing
+JSON numeric equality. Booleans remain distinct from numbers. An absent child
+is not equivalent to an explicitly present null.
+
+The new rule checks only strict ancestor/descendant pairs within one assertion
+list: final values, or the arguments/output of each individual tool step.
+Different steps, fields and tasks are not combined. A known ancestor's complete
+expected JSON value determines its descendants, so the checker resolves the
+relative JSON Pointer against that value and compares it using evaluator
+semantics. It honors escaped and empty object keys, canonical array indices,
+and object keys that resemble noncanonical array indices. It does not infer
+ancestor relationships from textual key prefixes.
+
+Each finding is `assertion.ancestor_conflict`, with index-based `path` and
+`related_path` identifying the descendant and ancestor assertion respectively.
+Findings do not echo their pointer strings or expected values. Within each task,
+existing budget findings come first, then final assertions, then each tool
+step's arguments and output. Within a list, descendant index followed by
+ancestor index defines deterministic order. Multiple conflicting pairs remain
+visible. The suite digest still binds the exact input.
+
+The check compares all pairs within a list (quadratic pair count), with pointer
+traversal and JSON equality costs depending on the values. It is an offline,
+in-memory preflight, not the bounded JSONL ingestion path. A clean combined
+report is **not a general satisfiability proof**: sibling constraints with
+incompatible implied container types, root-type requirements for tool arguments,
+and other global impossibilities are not analyzed. No scoring, input schema,
+provider execution or authenticity guarantee changes.
+
+The existing `--allow-contradictions` option applies to both finding types while
+preserving `passed: false` and all findings. Schema errors still fail even with
+allowance. Synthetic tests cover pointer boundaries, equality types, field/step
+isolation, deterministic ordering, input immutability, CLI policy, and a finite
+root-contract grid cross-checked through the evaluator. These are logic tests,
+not estimates of real-world detection rates.

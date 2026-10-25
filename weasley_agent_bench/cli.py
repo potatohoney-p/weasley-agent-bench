@@ -19,6 +19,8 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     lint = sub.add_parser("lint-suite", help="check static required-call budget contradictions")
     lint.add_argument("suite")
+    lint.add_argument("--check-assertions", action="store_true",
+                      help="also check ancestor/descendant equality contradictions")
     lint.add_argument("--allow-contradictions", action="store_true",
                       help="accept intentional negative fixtures without hiding lint findings")
     score = sub.add_parser("evaluate", help="score one saved run against a task suite")
@@ -57,7 +59,8 @@ def main(argv: list[str] | None = None) -> int:
                                       load_document(args.metadata), task_id=args.task_id, run_id=args.run_id)
             passed = True
         elif args.command == "lint-suite":
-            report = lint_suite(suite, allow_contradictions=args.allow_contradictions)
+            report = lint_suite(suite, allow_contradictions=args.allow_contradictions,
+                                check_assertions=args.check_assertions)
             passed = report["accepted"]
         elif args.command == "evaluate":
             report = evaluate(suite, load_document(args.run))

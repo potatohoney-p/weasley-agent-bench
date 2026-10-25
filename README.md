@@ -171,6 +171,8 @@ does not grade task success; a consistent failed run still needs evaluation.
 `lint-suite` exits 0 for a clean or explicitly allowed report, 1 for an unallowed
 static contradiction, and 2 for invalid input. Check `passed`, not just the exit
 code, when using `--allow-contradictions`; `accepted` reflects that explicit policy.
+Add `--check-assertions` for opt-in ancestor/descendant equality conflicts;
+see [the exact preflight boundary](docs/contract-lint.md#opt-in-ancestor-equality-checks).
 
 `compare` is a regression gate. Its `candidate_passed` field separately states
 whether **all** candidate tasks passed. Unchanged failures are still failures,
