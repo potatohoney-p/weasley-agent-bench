@@ -9,6 +9,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+
+from weasley_agent_bench.scoring import _evaluate_task
 
 from weasley_agent_bench import ContractError, compare_repeated, load_document
 
@@ -315,16 +318,17 @@ class JsonlRepeatedTests(unittest.TestCase):
             next(self.analyze(resamples=100, temporary_directory=self.root / "absent"))
 
     def test_mid_trial_scoring_failure_releases_storage_before_any_output(self):
-        nested = None
-        for _ in range(500):
-            nested = [nested]
-        self.inputs[0]["tasks"][1]["expect"] = {"final": [{"path": "", "equals": nested}]}
-        self.inputs[1]["trials"][0]["run"]["results"][1]["final"] = nested
+        target_id = self.inputs[0]["tasks"][1]["id"]
+        def fail_midway(task, result):
+            if task["id"] == target_id:
+                raise RecursionError("injected scoring failure")
+            return _evaluate_task(task, result)
         self.write_inputs()
         scratch = self.root / "scratch"
         scratch.mkdir()
-        with self.assertRaisesRegex(ContractError, "baseline JSONL line 4: invalid result contract or scoring limit"):
-            next(self.analyze(resamples=100, temporary_directory=scratch))
+        with patch("weasley_agent_bench.repeated_jsonl._evaluate_task", side_effect=fail_midway):
+            with self.assertRaisesRegex(ContractError, "baseline JSONL line 4: invalid result contract or scoring limit"):
+                next(self.analyze(resamples=100, temporary_directory=scratch))
         self.assertEqual(list(scratch.iterdir()), [])
 
 

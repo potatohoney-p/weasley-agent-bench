@@ -31,21 +31,33 @@ def _at_pointer(document: Any, pointer: str) -> Any:
 
 def _equal(actual: Any, expected: Any) -> bool:
     """JSON equality: object order is irrelevant, but true is not the number 1."""
-    if actual is _MISSING:
-        return False
-    if type(actual) in (int, float) and type(expected) in (int, float):
-        return actual == expected
-    if type(actual) is not type(expected):
-        return False
-    if isinstance(actual, dict):
-        return actual.keys() == expected.keys() and all(
-            _equal(actual[key], expected[key]) for key in actual
-        )
-    if isinstance(actual, list):
-        return len(actual) == len(expected) and all(
-            _equal(left, right) for left, right in zip(actual, expected)
-        )
-    return actual == expected
+    # Keep iterators, not recursive Python frames or a materialized work list.
+    # Validation already rejects non-JSON values; this adds no new input types.
+    stack = [iter(((actual, expected),))]
+    while stack:
+        try:
+            left, right = next(stack[-1])
+        except StopIteration:
+            stack.pop()
+            continue
+        if left is _MISSING:
+            return False
+        if type(left) in (int, float) and type(right) in (int, float):
+            if left != right:
+                return False
+        elif type(left) is not type(right):
+            return False
+        elif isinstance(left, dict):
+            if left.keys() != right.keys():
+                return False
+            stack.append(iter(zip(left.values(), map(right.__getitem__, left))))
+        elif isinstance(left, list):
+            if len(left) != len(right):
+                return False
+            stack.append(iter(zip(left, right)))
+        elif left != right:
+            return False
+    return True
 
 
 def _check(code: str, passed: bool, detail: str) -> dict:

@@ -7,6 +7,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+
+from weasley_agent_bench.scoring import _evaluate_task
 
 from weasley_agent_bench import ContractError, compare, compare_jsonl, evaluate_jsonl, load_document
 
@@ -216,17 +219,18 @@ class JsonlComparisonTests(unittest.TestCase):
         self.assertEqual(after["changes"], list(reversed(before["changes"])))
 
     def test_late_scoring_depth_failure_releases_scratch_before_any_output(self):
-        nested = None
-        for _ in range(500):
-            nested = [nested]
-        self.suite["tasks"][-2]["expect"] = {"final": [{"path": "", "equals": nested}]}
-        self.baseline["results"][-2]["final"] = self.candidate["results"][-2]["final"] = nested
+        target_id = self.suite["tasks"][-2]["id"]
+        def fail_midway(task, result):
+            if task["id"] == target_id:
+                raise RecursionError("injected scoring failure")
+            return _evaluate_task(task, result)
         self.write_inputs()
         scratch = self.root / "scratch"
         scratch.mkdir()
         for operation, paths in ((compare_jsonl, self.paths), (evaluate_jsonl, self.paths[:2])):
-            with self.assertRaisesRegex(ContractError, "suite JSONL line 4: record exceeds scoring limits"):
-                next(operation(*paths, temporary_directory=scratch))
+            with patch("weasley_agent_bench.jsonl._evaluate_task", side_effect=fail_midway):
+                with self.assertRaisesRegex(ContractError, "suite JSONL line 4: record exceeds scoring limits"):
+                    next(operation(*paths, temporary_directory=scratch))
             self.assertEqual(list(scratch.iterdir()), [])
 
 

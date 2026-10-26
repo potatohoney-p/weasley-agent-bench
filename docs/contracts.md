@@ -263,3 +263,18 @@ cannot cancel losses on already failing tasks. Same-suite rescoring and complete
 coverage remain mandatory; generated check IDs must match unambiguously.
 See [the complete output/identity/missing-evidence contract](check-regressions.md).
 This is a stricter selected gate, not a new scoring schema or model-quality claim.
+
+### Nested value equality
+
+Equality traverses validated JSON containers iteratively, preserving object-key
+order independence, array order, numeric int/float equality and the distinction
+between booleans and numbers. Deep values that the existing loader, validator and
+canonical serializer accept must not fail solely because equality adds recursive
+Python frames. This applies to final assertions and tool argument/output checks,
+including comparison and repeated-trial callers in JSON and JSONL paths.
+
+This is not unlimited-depth JSON support: parsing, validation and canonical
+serialization retain their existing interpreter/resource limits. Cyclic Python
+objects are not JSON and remain unsupported. Traversal retains one iterator per
+active container; it does not flatten all descendants into a work list. No score,
+schema, digest protocol, provider execution or benchmark-quality claim changes.
