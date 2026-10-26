@@ -103,3 +103,11 @@ at completion leaves no open database or scratch directory; close/removal faults
 cannot publish completion; early close and CLI output failures release resources
 or preserve cleanup errors. Scores and successful streams remain unchanged.
 This is local output/resource integrity, not real-run validation or adoption.
+
+## Optional check-level regression protection
+
+Protect named checks within already failing tasks without changing the default
+binary-task comparator. Acceptance: new check losses fail the selected gate,
+improvements cannot mask them, identities/coverage remain explicit, legacy
+reports are unchanged, and JSON/JSONL logical reports and cleanup semantics match.
+Check counts are diagnostics, not independent trials or model-quality scores.

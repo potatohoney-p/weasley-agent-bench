@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "suite_id": "synthetic-checks",
+  "run_id": "baseline",
+  "results": [
+    {
+      "task_id": "case",
+      "status": "completed",
+      "final": {
+        "answer": false,
+        "evidence": true
+      },
+      "tool_calls": [
+        {
+          "name": "lookup",
+          "outcome": "success",
+          "arguments": {},
+          "output": null
+        }
+      ],
+      "usage": {
+        "input_tokens": 1
+      }
+    }
+  ]
+}

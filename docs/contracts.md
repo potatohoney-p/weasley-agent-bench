@@ -251,3 +251,15 @@ Cleanup failure may leave filesystem artifacts; it is never silently suppressed.
 The wire events, scores, ordering, provenance and successful exit-code policy
 are unchanged. Only scratch lifetime and completion/error ordering change. Tests
 use synthetic inputs and injected local storage/output faults, not real runs.
+
+### Optional named-check regression policy
+
+`compare` and `compare_jsonl` accept explicit `check_regressions=True` (CLI:
+`--check-regressions`). Defaults remain the binary-task gate. The opt-in extension
+marks `regression_policy: "checks-v1"`, adds ordered per-task check loss/gain
+codes and corresponding diagnostic counts, retains `task_no_regressions`, and
+sets `no_regressions` from whether any check changed true→false. Improvements
+cannot cancel losses on already failing tasks. Same-suite rescoring and complete
+coverage remain mandatory; generated check IDs must match unambiguously.
+See [the complete output/identity/missing-evidence contract](check-regressions.md).
+This is a stricter selected gate, not a new scoring schema or model-quality claim.

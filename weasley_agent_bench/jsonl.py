@@ -14,7 +14,7 @@ from contextlib import closing, contextmanager
 from .contracts import (
     ContractError, _constant, _object, _pairs, _string, _validate_result, _validate_task,
 )
-from .scoring import _compare_rows, _evaluate_task
+from .scoring import _compare_rows, _evaluate_task, _comparison_gate, _validate_check_policy
 from .provenance import _validate_provenance, _verification_report
 
 DEFAULT_MAX_RECORD_BYTES = 1024 * 1024
@@ -255,7 +255,8 @@ def evaluate_jsonl(suite_path: str | Path, run_path: str | Path, *,
 
 def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_path: str | Path, *,
                   max_record_bytes: int = DEFAULT_MAX_RECORD_BYTES,
-                  temporary_directory: str | Path | None = None) -> Iterator[dict]:
+                  temporary_directory: str | Path | None = None,
+                  check_regressions: bool = False) -> Iterator[dict]:
     """Compare two complete saved runs with bounded records and temporary indexes.
 
     The inputs use the existing suite/run JSONL formats. Output changes follow
@@ -263,6 +264,7 @@ def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_p
     summary, emitted after scratch cleanup, establishes a complete report.
     Consume or close the iterator before that event.
     """
+    _validate_check_policy(check_regressions)
     with _storage(max_record_bytes, temporary_directory) as db:
         suite, total, digest = _ingest(db, suite_path, "suite", max_record_bytes)
         baseline, old_count, _ = _ingest(db, baseline_path, "run", max_record_bytes,
@@ -275,6 +277,8 @@ def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_p
         db.commit()
         summary = {"total": total, "regressions": 0, "improvements": 0,
                    "baseline_passed": 0, "candidate_passed": 0}
+        if check_regressions:
+            summary.update(check_regressions=0, check_improvements=0, tasks_with_check_regressions=0)
         with closing(db.execute(
             "SELECT tasks.ordinal, tasks.payload, old.payload, new.payload FROM tasks "
             "LEFT JOIN results AS old ON old.id = tasks.id AND old.source = 'baseline' "
@@ -284,7 +288,8 @@ def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_p
                 try:
                     task, old, new = json.loads(task), json.loads(old), json.loads(new)
                     change = _compare_rows(_evaluate_task(task, old), _evaluate_task(task, new),
-                                           old.get("usage", {}), new.get("usage", {}))
+                                           old.get("usage", {}), new.get("usage", {}),
+                                           check_regressions=check_regressions)
                     payload = _canonical(change)
                 except (ValueError, RecursionError) as error:
                     raise _error("suite", ordinal + 2, "record exceeds scoring limits") from error
@@ -292,11 +297,16 @@ def compare_jsonl(suite_path: str | Path, baseline_path: str | Path, candidate_p
                 summary["improvements"] += change["change"] == "improvement"
                 summary["baseline_passed"] += change["baseline_passed"]
                 summary["candidate_passed"] += change["candidate_passed"]
+                if check_regressions:
+                    summary["check_regressions"] += len(change["check_regressions"])
+                    summary["check_improvements"] += len(change["check_improvements"])
+                    summary["tasks_with_check_regressions"] += bool(change["check_regressions"])
                 db.execute("INSERT INTO reports VALUES (?, ?)", (ordinal, payload))
         db.commit()
         yield {"format": "weasley-agent-bench/comparison-jsonl", "format_version": 1,
                "schema_version": 1, "suite_id": suite["suite_id"], "suite_sha256": digest,
-               "baseline_run_id": baseline["run_id"], "candidate_run_id": candidate["run_id"]}
+               "baseline_run_id": baseline["run_id"], "candidate_run_id": candidate["run_id"],
+               **({"regression_policy": "checks-v1"} if check_regressions else {})}
         yield from _report_events(db, "change")
-    yield {"complete": True, "no_regressions": summary["regressions"] == 0,
+    yield {"complete": True, **_comparison_gate(summary, check_regressions),
            "candidate_passed": summary["candidate_passed"] == total, "summary": summary}

@@ -46,6 +46,9 @@ def main(argv: list[str] | None = None) -> int:
     paired_stream.add_argument("candidate")
     paired_stream.add_argument("--max-record-bytes", type=int, default=DEFAULT_MAX_RECORD_BYTES)
     paired_stream.add_argument("--temporary-directory", help="parent directory for temporary comparison storage")
+    for comparison in (diff, paired_stream):
+        comparison.add_argument("--check-regressions", action="store_true",
+                                help="reject any newly failing named check, including already failing tasks")
     repeated = sub.add_parser("compare-repeated", help="describe paired trials on a fixed task suite")
     repeated.add_argument("suite")
     repeated.add_argument("baseline")
@@ -105,7 +108,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "compare-jsonl":
             with closing(compare_jsonl(args.suite, args.baseline, args.candidate,
                                        max_record_bytes=args.max_record_bytes,
-                                       temporary_directory=args.temporary_directory)) as events:
+                                       temporary_directory=args.temporary_directory,
+                                       check_regressions=args.check_regressions)) as events:
                 for event in events:
                     print(json.dumps(event, sort_keys=True, ensure_ascii=True, allow_nan=False))
             return 0 if event["no_regressions"] else 1
@@ -127,7 +131,8 @@ def main(argv: list[str] | None = None) -> int:
             report = evaluate(suite, load_document(args.run))
             passed = report["passed"]
         elif args.command == "compare":
-            report = compare(suite, load_document(args.baseline), load_document(args.candidate))
+            report = compare(suite, load_document(args.baseline), load_document(args.candidate),
+                             check_regressions=args.check_regressions)
             # This is a regression gate, not a claim that every candidate task passed.
             passed = report["no_regressions"]
         elif args.command == "compare-repeated":

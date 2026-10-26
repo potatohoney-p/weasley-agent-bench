@@ -239,3 +239,11 @@ This does not run a model or certify execution; missing telemetry stays missing.
 ## License
 
 Licensed under the [MIT License](LICENSE).
+
+### Protect checks within already failing tasks
+
+`compare` and `compare-jsonl` accept `--check-regressions` to reject any newly
+failing named check, even when the task was already failing for another reason.
+Default task-pass comparison stays unchanged. Improvements cannot cancel losses;
+the report distinguishes task transitions from check transitions. See the
+[synthetic example and opt-in contract](docs/check-regressions.md).

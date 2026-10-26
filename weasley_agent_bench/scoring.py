@@ -136,7 +136,40 @@ def evaluate(suite: dict, run: dict) -> dict:
     }
 
 
-def _compare_rows(old: dict, new: dict, old_usage: dict, new_usage: dict) -> dict:
+def _validate_check_policy(check_regressions: bool) -> None:
+    if type(check_regressions) is not bool:
+        raise ContractError("check_regressions must be a boolean")
+
+
+def _check_transitions(old: list[dict], new: list[dict]) -> dict:
+    # Checks are generated from the SAME validated task, not caller-supplied
+    # reports. Still fail closed if a future scorer changes identity/coverage.
+    def indexed(checks: list[dict]) -> dict:
+        result = {}
+        for check in checks:
+            code, passed = check.get("code"), check.get("passed")
+            if type(code) is not str or code in result or type(passed) is not bool:
+                raise ContractError("comparison requires unambiguous check identities and booleans")
+            result[code] = passed
+        return result
+    before, after = indexed(old), indexed(new)
+    if before.keys() != after.keys():
+        raise ContractError("comparison check identities do not match")
+    return {
+        "check_regressions": [code for code in before if before[code] and not after[code]],
+        "check_improvements": [code for code in before if not before[code] and after[code]],
+    }
+
+
+def _comparison_gate(summary: dict, check_regressions: bool) -> dict:
+    if check_regressions:
+        return {"no_regressions": summary["check_regressions"] == 0,
+                "task_no_regressions": summary["regressions"] == 0}
+    return {"no_regressions": summary["regressions"] == 0}
+
+
+def _compare_rows(old: dict, new: dict, old_usage: dict, new_usage: dict, *,
+                  check_regressions: bool = False) -> dict:
     """Compare a complete, validated task pair using either input transport."""
     change = "unchanged"
     if old["passed"] and not new["passed"]:
@@ -151,11 +184,13 @@ def _compare_rows(old: dict, new: dict, old_usage: dict, new_usage: dict) -> dic
         "usage_delta": {key: new_usage[key] - old_usage[key] for key in USAGE_FIELDS
                         if key in old_usage and key in new_usage},
         "failed_checks": [check["code"] for check in new["checks"] if not check["passed"]],
+        **(_check_transitions(old["checks"], new["checks"]) if check_regressions else {}),
     }
 
 
-def compare(suite: dict, baseline: dict, candidate: dict) -> dict:
-    """Compare paired tasks, rejecting incomplete coverage rather than dropping it."""
+def compare(suite: dict, baseline: dict, candidate: dict, *, check_regressions: bool = False) -> dict:
+    """Compare complete paired tasks; optionally gate every named check loss."""
+    _validate_check_policy(check_regressions)
     before = evaluate(suite, baseline)
     after = evaluate(suite, candidate)
     if before["summary"]["missing"] or after["summary"]["missing"]:
@@ -167,19 +202,24 @@ def compare(suite: dict, baseline: dict, candidate: dict) -> dict:
         task_id = old["task_id"]
         old_usage = old_results[task_id].get("usage", {})
         new_usage = new_results[task_id].get("usage", {})
-        changes.append(_compare_rows(old, new, old_usage, new_usage))
-    regressions = sum(item["change"] == "regression" for item in changes)
+        changes.append(_compare_rows(old, new, old_usage, new_usage, check_regressions=check_regressions))
+    summary = {"total": len(changes), "regressions": sum(item["change"] == "regression" for item in changes),
+               "improvements": sum(item["change"] == "improvement" for item in changes),
+               "baseline_passed": before["summary"]["passed"],
+               "candidate_passed": after["summary"]["passed"]}
+    if check_regressions:
+        summary.update(check_regressions=sum(len(row["check_regressions"]) for row in changes),
+                       check_improvements=sum(len(row["check_improvements"]) for row in changes),
+                       tasks_with_check_regressions=sum(bool(row["check_regressions"]) for row in changes))
     return {
         "schema_version": 1,
         "suite_id": suite["suite_id"],
         "suite_sha256": before["suite_sha256"],
         "baseline_run_id": baseline["run_id"],
         "candidate_run_id": candidate["run_id"],
-        "no_regressions": regressions == 0,
+        **_comparison_gate(summary, check_regressions),
+        **({"regression_policy": "checks-v1"} if check_regressions else {}),
         "candidate_passed": after["passed"],
-        "summary": {"total": len(changes), "regressions": regressions,
-                    "improvements": sum(item["change"] == "improvement" for item in changes),
-                    "baseline_passed": before["summary"]["passed"],
-                    "candidate_passed": after["summary"]["passed"]},
+        "summary": summary,
         "changes": changes,
     }
