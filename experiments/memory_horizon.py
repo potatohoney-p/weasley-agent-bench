@@ -204,6 +204,11 @@ def export(
     for name in runs:
         if not isinstance(name, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name) is None:
             raise ContractError("export: run names must be ASCII filename stems, not paths")
+        # Windows treats reserved device stems followed by any extension as
+        # devices too. Enforce the same portable namespace on every host.
+        stem = name.split(".", 1)[0].upper()
+        if stem in {"CON", "PRN", "AUX", "NUL"} or re.fullmatch(r"(?:COM|LPT)[1-9]", stem):
+            raise ContractError("export: run names must not use reserved Windows device stems")
     artifacts = [("report.json", report), ("suite.json", suite), ("episodes.json", episodes),
                  *((f"{name}.json", run) for name, run in runs.items())]
     if runner_revision is not None:

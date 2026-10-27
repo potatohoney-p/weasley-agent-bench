@@ -106,3 +106,17 @@ on a case-sensitive host from aliasing its own evidence on another host. Invalid
 names and collisions raise `ContractError` before creating the output directory
 or writing any artifact. This preflight does not promise transactional rollback
 on later I/O failure; exclusive file creation still protects existing evidence.
+
+### Portable device-name preflight
+
+Run labels also reject Windows device stems (`CON`, `PRN`, `AUX`, `NUL`,
+`COM1`–`COM9`, `LPT1`–`LPT9`) case-insensitively, including labels whose
+first dot follows one of those stems. Appending `.json` or `.provenance.json`
+does not make such a filename ordinary on Windows. Rejection happens before
+provenance construction, filesystem checks, directory creation or writes,
+on every platform; valid near-matches such as `console` and `safe.NUL` remain
+allowed. Spaces and non-ASCII superscript device digits are already excluded
+by the existing ASCII grammar. This is not a promise that every allowed name
+fits every filesystem/path-length limit, nor transactional rollback after I/O.
+
+See [Microsoft file naming rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).
