@@ -142,7 +142,14 @@ def _ingest(db: sqlite3.Connection, path: str | Path, kind: str, limit: int,
 def _storage(max_record_bytes: int, temporary_directory: str | Path | None) -> Iterator[sqlite3.Connection]:
     _byte_limit(max_record_bytes, "max_record_bytes")
     try:
-        with tempfile.TemporaryDirectory(prefix="weasley-jsonl-", dir=temporary_directory) as directory:
+        try:
+            scratch = tempfile.TemporaryDirectory(prefix="weasley-jsonl-", dir=temporary_directory)
+        except ValueError as error:
+            # Invalid paths (including filesystem encoding failures) can fail
+            # before the context exists. Do not catch ValueError from callers
+            # or validation executed inside the storage context.
+            raise ContractError("JSONL evaluation temporary storage failure") from error
+        with scratch as directory:
             db = sqlite3.connect(Path(directory) / "evaluation.sqlite3")
             try:
                 db.execute("PRAGMA cache_size = -2048")
