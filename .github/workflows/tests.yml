@@ -30,3 +30,30 @@ jobs:
         run: python -m experiments.memory_horizon --output-dir reports/memory-ci
       - name: Evaluate exported reference run
         run: python -m weasley_agent_bench evaluate reports/memory-ci/suite.json reports/memory-ci/latest-record.json
+
+  synthetic-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: potatohoney-p/weasley-subagents
+          ref: 72901e3f17eea4d56418b24e7a63f10c7ae22375
+          path: .upstream/subagents
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.11"
+      - name: Install pinned harness dependencies without lifecycle scripts
+        working-directory: .upstream/subagents
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Exercise synthetic child through actual foreground runtime
+        env:
+          WEASLEY_SUBAGENTS_TEST_SOURCE: ${{ github.workspace }}/.upstream/subagents
+        run: python -m unittest discover -s tests -p test_subagents_runtime.py -v

@@ -9,6 +9,7 @@ import json
 import math
 from pathlib import Path
 import platform
+import re
 import statistics
 import time
 
@@ -198,6 +199,16 @@ def export(
     directory: Path, report: dict, suite: dict, runs: dict, episodes: list,
     *, runner_revision: str | None = None,
 ) -> None:
+    # Run labels are artifact names, not paths. Validate the whole namespace
+    # before any directory or file is created, on every host platform.
+    for name in runs:
+        if not isinstance(name, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name) is None:
+            raise ContractError("export: run names must be ASCII filename stems, not paths")
+        # Windows treats reserved device stems followed by any extension as
+        # devices too. Enforce the same portable namespace on every host.
+        stem = name.split(".", 1)[0].upper()
+        if stem in {"CON", "PRN", "AUX", "NUL"} or re.fullmatch(r"(?:COM|LPT)[1-9]", stem):
+            raise ContractError("export: run names must not use reserved Windows device stems")
     artifacts = [("report.json", report), ("suite.json", suite), ("episodes.json", episodes),
                  *((f"{name}.json", run) for name, run in runs.items())]
     if runner_revision is not None:
@@ -205,14 +216,17 @@ def export(
             (f"{name}.provenance.json", create_provenance(suite, run, runner_revision=runner_revision))
             for name, run in runs.items()
         )
-        if len({name for name, _ in artifacts}) != len(artifacts):
-            raise ContractError("export: generated artifact filenames must be unique")
+    if len({name.casefold() for name, _ in artifacts}) != len(artifacts):
+        raise ContractError("export: generated artifact filenames must be unique ignoring case")
     files = dict(artifacts)
     if any((directory / name).exists() for name in files):
         raise FileExistsError("export would overwrite an existing artifact; choose a fresh directory")
     directory.mkdir(parents=True, exist_ok=True)
     for name, value in files.items():
-        (directory / name).write_text(json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        payload = json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n"
+        # Preflight can race another exporter; never truncate a file that won.
+        with (directory / name).open("x", encoding="utf-8") as stream:
+            stream.write(payload)
 
 
 def main(argv=None):

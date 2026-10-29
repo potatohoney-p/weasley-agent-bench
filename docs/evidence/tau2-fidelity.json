@@ -1,0 +1,217 @@
+{
+  "adapter": "tau2-minimized-single-call-transfer-fidelity-v1",
+  "derived": {
+    "arguments_sha256": "canonical JSON hash preserving integer/float representation",
+    "final": "observation envelope, not a native structured model answer",
+    "run_id": "caller-selected artifact label",
+    "status": "closed supported recorded conversation, not task success",
+    "task_id": "caller-selected fidelity contract"
+  },
+  "execution_authenticated": false,
+  "fidelity_passed": true,
+  "legacy_jsonl_report_parity": true,
+  "losses": [
+    {
+      "path": "/messages/0/content",
+      "reason": "dialogue context not scored; full input digest still binds it"
+    },
+    {
+      "path": "/messages/0/role",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/0/tool_calls",
+      "reason": "validated null call list"
+    },
+    {
+      "path": "/messages/0/turn_idx",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/0/usage",
+      "reason": "all usage unreported; partial counts are not measured totals"
+    },
+    {
+      "path": "/messages/1/content",
+      "reason": "dialogue context not scored; full input digest still binds it"
+    },
+    {
+      "path": "/messages/1/role",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/1/tool_calls",
+      "reason": "validated null call list"
+    },
+    {
+      "path": "/messages/1/turn_idx",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/1/usage",
+      "reason": "all usage unreported; partial counts are not measured totals"
+    },
+    {
+      "path": "/messages/2/content",
+      "reason": "validated null call-turn text"
+    },
+    {
+      "path": "/messages/2/role",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/2/tool_calls/0/requestor",
+      "reason": "validated assistant ownership"
+    },
+    {
+      "path": "/messages/2/turn_idx",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/2/usage",
+      "reason": "all usage unreported; partial counts are not measured totals"
+    },
+    {
+      "path": "/messages/3/requestor",
+      "reason": "validated assistant ownership"
+    },
+    {
+      "path": "/messages/3/role",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/3/turn_idx",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/4/role",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/4/tool_calls",
+      "reason": "validated null call list"
+    },
+    {
+      "path": "/messages/4/turn_idx",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/4/usage",
+      "reason": "all usage unreported; partial counts are not measured totals"
+    },
+    {
+      "path": "/messages/5/content",
+      "reason": "terminal user signal validated and retained in provenance"
+    },
+    {
+      "path": "/messages/5/role",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/5/tool_calls",
+      "reason": "validated null call list"
+    },
+    {
+      "path": "/messages/5/turn_idx",
+      "reason": "validated profile position; no separate scored field"
+    },
+    {
+      "path": "/messages/5/usage",
+      "reason": "all usage unreported; partial counts are not measured totals"
+    },
+    {
+      "path": "/termination_reason",
+      "reason": "validated recorded terminal retained in provenance"
+    }
+  ],
+  "matches_reviewed_fixture": true,
+  "provenance": {
+    "identity": {
+      "id": "bfaceb85-d727-4de5-b37c-e31fdf90fb39",
+      "seed": 626729,
+      "task_id": "46",
+      "trial": 0
+    },
+    "input_sha256": "9fc77bb6ca72f58a42589ffa8bbac89d26fec1b0d0bef53ea2a8ddb523fec636",
+    "run_sha256": "70edac8bbac00d1d50796fcdc2d9e49239d9e49ef3d12333b1201aa8f2097943",
+    "source_terminal": "user_stop",
+    "suite_sha256": "bc70278cc01aba3bbd41ff05349e76e60b4c274307be536cfbad4b9e9a4e60be",
+    "terminal_signal": "###TRANSFER###",
+    "usage": {
+      "assistant_observed_turns": [
+        2,
+        4
+      ],
+      "assistant_unreported_turns": [
+        0
+      ],
+      "emitted": false
+    }
+  },
+  "provider_quality_evaluated": false,
+  "purpose": "recorded observation fidelity only",
+  "report": {
+    "passed": true,
+    "results": [
+      {
+        "checks": [
+          {
+            "code": "result.present",
+            "detail": "a result was supplied for this task",
+            "passed": true
+          },
+          {
+            "code": "result.completed",
+            "detail": "agent completed the task",
+            "passed": true
+          },
+          {
+            "code": "final[0]",
+            "detail": "value at JSON Pointer '/assistant_text' matches",
+            "passed": true
+          },
+          {
+            "code": "final[1]",
+            "detail": "value at JSON Pointer '/episode_identity' matches",
+            "passed": true
+          },
+          {
+            "code": "final[2]",
+            "detail": "value at JSON Pointer '/call_id' matches",
+            "passed": true
+          },
+          {
+            "code": "final[3]",
+            "detail": "value at JSON Pointer '/arguments_sha256' matches",
+            "passed": true
+          },
+          {
+            "code": "tools.count",
+            "detail": "tool count matches the exact sequence",
+            "passed": true
+          },
+          {
+            "code": "tools.step[0]",
+            "detail": "tool step 0 matches name, outcome and assertions",
+            "passed": true
+          }
+        ],
+        "passed": true,
+        "status": "completed",
+        "task_id": "historical-observations"
+      }
+    ],
+    "run_id": "fidelity-candidate",
+    "schema_version": 1,
+    "suite_id": "tau2-task46-trial0-observation-fidelity-v1",
+    "suite_sha256": "bc70278cc01aba3bbd41ff05349e76e60b4c274307be536cfbad4b9e9a4e60be",
+    "summary": {
+      "failed": 0,
+      "missing": 0,
+      "passed": 1,
+      "total": 1
+    }
+  },
+  "task_success_evaluated": false,
+  "usage_reported": false
+}

@@ -11,7 +11,7 @@ This offline prototype separates four questions:
 4. How variable is a paired pass-rate change across repeated trials on a fixed suite?
 
 The library and CLI use only Python's standard library. Python 3.11+ is required.
-No accounts, API keys, database, network service, or package installation are
+No accounts, API keys, external database, network service, or package installation are
 needed to run from source.
 
 ## Reproduce the demo
@@ -24,10 +24,31 @@ python -m weasley_agent_bench evaluate examples/suite.json examples/candidate.js
 python -m weasley_agent_bench compare examples/suite.json examples/baseline.json examples/candidate.json
 ```
 
-All data is hand-authored and synthetic. The baseline fails two of four tasks:
+The four-task demo is hand-authored and synthetic. The baseline fails two tasks:
 it recalls a superseded fact and loses a child's review finding. The candidate
 passes all four. This proves the evaluator's behavior; it measures no real
 provider or model capability.
+
+For suites and saved outputs that should not be retained entirely in memory,
+an opt-in JSONL evaluator uses bounded records and temporary local SQLite storage:
+
+```bash
+python -m weasley_agent_bench evaluate-jsonl examples/jsonl/suite.jsonl examples/jsonl/candidate.jsonl
+```
+
+It preserves the same scores, suite digest, and missing-task failures. A terminal
+summary marks a complete report. See [JSONL input, output, resource bounds, and
+synthetic scaling measurements](docs/jsonl-evaluation.md).
+
+The same bounded input format also supports a paired regression gate:
+
+```bash
+python -m weasley_agent_bench compare-jsonl examples/jsonl/suite.jsonl examples/jsonl/baseline.jsonl examples/jsonl/candidate.jsonl
+```
+
+Both runs must cover every task. Exit 0 means no regressions; unchanged candidate
+failures can still remain. See [paired JSONL semantics, completion rules, and
+resource measurements](docs/jsonl-comparison.md).
 
 | Task | Baseline | Candidate | Contract exercised |
 | --- | --- | --- | --- |
@@ -108,7 +129,34 @@ conditional on the fixed suite and independent representative trial pairs;
 tasks are not independent bootstrap samples. This command is descriptive,
 not a significance or regression gate. See the [method and input format](docs/repeated-runs.md).
 
+For bounded saved batches, the equivalent opt-in JSONL analysis keeps individual
+result records bounded and uses temporary disk indexes:
+
+```bash
+python -m weasley_agent_bench compare-repeated-jsonl examples/repeated/jsonl/suite.jsonl examples/repeated/jsonl/baseline.jsonl examples/repeated/jsonl/candidate.jsonl --seed 17
+```
+
+Whole trial pairs remain the resampling unit. Duplicate/missing observations
+fail; distinct IDs do not prove independent repetitions. Require the terminal
+completion event. See [batch framing, statistics and resource bounds](docs/jsonl-repeated.md).
+
 ## Use your own runner
+
+### Historical adapter fidelity
+
+One separately attributed public historical tau2 episode exercises preservation
+of native arguments, output, final assistant text and identity:
+
+```bash
+python -m experiments.tau2_fidelity
+```
+
+It checks a frozen observation contract through legacy and bounded JSONL
+evaluation. This recorded interaction occurred in a simulated benchmark; passing
+means fidelity to the reviewed record, not task success, provider quality or
+execution authenticity. Usage remains unreported. The
+[source, MIT attribution, profile and loss accounting](docs/tau2-fidelity.md)
+describe this narrow historical exception and synthetic mutation checks.
 
 Before spending a run, optionally check for impossible required-call budgets:
 
@@ -138,6 +186,12 @@ unchanged. See [provenance sidecars](docs/provenance.md) for CLI/API examples,
 memory-export support, canonicalization, and the trust boundary. Unsigned
 digests establish consistency, not authenticity or proof of execution.
 
+For JSONL files, `verify-provenance-jsonl suite.jsonl run.jsonl run.provenance.json`
+checks the same sidecar while bounding records and using temporary disk indexes.
+It recomputes both canonical digests before reporting success. See
+[JSONL provenance verification](docs/jsonl-provenance.md) for byte conventions,
+file/resource boundaries, and the distinction between consistency and coverage.
+
 ```python
 from weasley_agent_bench import evaluate, load_document
 
@@ -164,13 +218,15 @@ assertion paths are present, so use synthetic or appropriately reviewed inputs.
 | `1` | A task failed evaluation or a comparison found a regression. |
 | `2` | Invalid input or command usage; input errors are JSON on stderr. |
 
-`create-provenance` and `verify-provenance` exit 0 on successful creation or
+`create-provenance`, `verify-provenance`, and `verify-provenance-jsonl` exit 0 on successful creation or
 consistency verification, and 2 on invalid input or a mismatch. Verification
 does not grade task success; a consistent failed run still needs evaluation.
 
 `lint-suite` exits 0 for a clean or explicitly allowed report, 1 for an unallowed
 static contradiction, and 2 for invalid input. Check `passed`, not just the exit
 code, when using `--allow-contradictions`; `accepted` reflects that explicit policy.
+Add `--check-assertions` for opt-in ancestor/descendant equality conflicts;
+see [the exact preflight boundary](docs/contract-lint.md#opt-in-ancestor-equality-checks).
 
 `compare` is a regression gate. Its `candidate_passed` field separately states
 whether **all** candidate tasks passed. Unchanged failures are still failures,
@@ -197,7 +253,21 @@ An opt-in `export-subagents` command converts a bounded, validated subset of
 weasley-subagents version-1 foreground artifacts to a single task result.
 See [the pinned source contract, synthetic fixture and limitations](docs/subagents-export.md).
 This does not run a model or certify execution; missing telemetry stays missing.
+For exact suite/initial-prompt consistency, add `--require-prompt-match`; expanded
+prompts may intentionally differ, so this gate is explicit rather than default.
+
+The [synthetic subprocess integration](docs/subagents-export.md#synthetic-subprocess-integration)
+exercises pinned foreground artifact persistence separately from ordinary Python
+tests. It is not a real model run or provider benchmark.
 
 ## License
 
 Licensed under the [MIT License](LICENSE).
+
+### Protect checks within already failing tasks
+
+`compare` and `compare-jsonl` accept `--check-regressions` to reject any newly
+failing named check, even when the task was already failing for another reason.
+Default task-pass comparison stays unchanged. Improvements cannot cancel losses;
+the report distinguishes task transitions from check transitions. See the
+[synthetic example and opt-in contract](docs/check-regressions.md).

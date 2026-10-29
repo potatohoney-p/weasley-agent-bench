@@ -18,8 +18,8 @@ The separately proposed `weasley-trace-replay` handles trace validation and
 replay/differential execution. This project deliberately does not replay traces;
 an adapter could export replay outcomes as saved run results in a later revision.
 
-The account inventory checked by the coordinating task showed no genuine
+Historical pre-creation inventory (2026-10-20): the account inventory showed no genuine
 engineering repository created in the week beginning 2026-10-19. GitHub returned
-404 for `potatohoney-p/weasley-agent-bench` before implementation. The local MVP
-does not count as a newly created private GitHub repository until publication is
-authorized, performed, and verified.
+404 for `potatohoney-p/weasley-agent-bench` before implementation. At that point,
+the local MVP had not yet been counted as a created GitHub repository. For the
+current publication status, see [the roadmap](../ROADMAP.md#publication-status).

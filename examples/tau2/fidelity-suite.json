@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "suite_id": "tau2-task46-trial0-observation-fidelity-v1",
+  "tasks": [
+    {
+      "id": "historical-observations",
+      "prompt": "Check preservation of the reviewed historical task46 trial0 observations. This derived fidelity contract does not evaluate tau2 task success.",
+      "tags": ["historical-simulated-benchmark", "adapter-fidelity", "not-task-success"],
+      "expect": {
+        "final": [
+          {"path": "/assistant_text", "equals": "YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON."},
+          {"path": "/episode_identity", "equals": {"id": "bfaceb85-d727-4de5-b37c-e31fdf90fb39", "task_id": "46", "trial": 0, "seed": 626729}},
+          {"path": "/call_id", "equals": "call_jSwZRs774js2PBliHRee5crf"},
+          {"path": "/arguments_sha256", "equals": "24d1a8fa3001b98b41a65d7a4e6ee4a620d3581a3243522316f08c5cc05bebbf"}
+        ],
+        "tools": {
+          "mode": "exact",
+          "steps": [
+            {
+              "name": "transfer_to_human_agents",
+              "outcome": "success",
+              "arguments": [{"path": "", "equals": {"summary": "User wants to refund insurance only without canceling the flight. Policy does not allow removal of insurance after booking."}}],
+              "output": [{"path": "", "equals": "Transfer successful"}]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

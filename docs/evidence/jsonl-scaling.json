@@ -1,0 +1,267 @@
+{
+  "cases": [
+    {
+      "fixture_bytes": {
+        "run.json": 143850,
+        "run.jsonl": 143923,
+        "suite.json": 113350,
+        "suite.jsonl": 113427
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 0.12217406499985373,
+          "logical_report_sha256": "94e48ca93e9175ca981f91a1ef8f72d02212cb20c971f2c9afe7c2bdae642906",
+          "mode": "legacy",
+          "ordered_results_sha256": "c13c80842815f1240a611498502cdb603a98b497930078e6dc282f03e57688e1",
+          "passed": false,
+          "process_ru_maxrss": 24812,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "08e3f48079f3940a03aa824f36cb970904e1d855777987c9ed51ad8cf46f7126",
+          "summary": {
+            "failed": 46,
+            "missing": 0,
+            "passed": 454,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 2417958
+        },
+        {
+          "elapsed_wall_seconds": 0.3665823790070135,
+          "logical_report_sha256": "94e48ca93e9175ca981f91a1ef8f72d02212cb20c971f2c9afe7c2bdae642906",
+          "mode": "jsonl",
+          "ordered_results_sha256": "c13c80842815f1240a611498502cdb603a98b497930078e6dc282f03e57688e1",
+          "passed": false,
+          "process_ru_maxrss": 21444,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "08e3f48079f3940a03aa824f36cb970904e1d855777987c9ed51ad8cf46f7126",
+          "summary": {
+            "failed": 46,
+            "missing": 0,
+            "passed": 454,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 684032,
+          "tracemalloc_peak_bytes": 54896
+        }
+      ],
+      "output_bytes_per_task": 128,
+      "score_parity": true,
+      "tasks": 500
+    },
+    {
+      "fixture_bytes": {
+        "run.json": 2127851,
+        "run.jsonl": 2127924,
+        "suite.json": 113351,
+        "suite.jsonl": 113428
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 0.13579466800001683,
+          "logical_report_sha256": "f0c4482003e684d55ad7e72655480cf30c2d64062a9fc7430f4e1066c5061529",
+          "mode": "legacy",
+          "ordered_results_sha256": "c13c80842815f1240a611498502cdb603a98b497930078e6dc282f03e57688e1",
+          "passed": false,
+          "process_ru_maxrss": 26936,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "222945994667652c583ae044ce5f1bec4692a073afc3631da564e45325641bc3",
+          "summary": {
+            "failed": 46,
+            "missing": 0,
+            "passed": 454,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 5421635
+        },
+        {
+          "elapsed_wall_seconds": 0.4037959279958159,
+          "logical_report_sha256": "f0c4482003e684d55ad7e72655480cf30c2d64062a9fc7430f4e1066c5061529",
+          "mode": "jsonl",
+          "ordered_results_sha256": "c13c80842815f1240a611498502cdb603a98b497930078e6dc282f03e57688e1",
+          "passed": false,
+          "process_ru_maxrss": 23596,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "222945994667652c583ae044ce5f1bec4692a073afc3631da564e45325641bc3",
+          "summary": {
+            "failed": 46,
+            "missing": 0,
+            "passed": 454,
+            "total": 500
+          },
+          "temporary_disk_peak_sampled_bytes": 2839056,
+          "tracemalloc_peak_bytes": 70497
+        }
+      ],
+      "output_bytes_per_task": 4096,
+      "score_parity": true,
+      "tasks": 500
+    },
+    {
+      "fixture_bytes": {
+        "run.json": 1447078,
+        "run.jsonl": 1447152,
+        "suite.json": 1142851,
+        "suite.jsonl": 1142929
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 1.3770096779990126,
+          "logical_report_sha256": "9600c47a65f9dde4695fa67dcaccc405f9dacf841401061262d17069c3880764",
+          "mode": "legacy",
+          "ordered_results_sha256": "92050c8a68f658aa66b8bdac056aedd8bdddd5b2e944b5fd6081153b1dc572d2",
+          "passed": false,
+          "process_ru_maxrss": 77804,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "565bdfa5c57f9ceeafb9e67267c8ab2ea31b8fa1cbdd6c0757577f7dee7a1075",
+          "summary": {
+            "failed": 455,
+            "missing": 0,
+            "passed": 4545,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 24442955
+        },
+        {
+          "elapsed_wall_seconds": 2.5214196250017267,
+          "logical_report_sha256": "9600c47a65f9dde4695fa67dcaccc405f9dacf841401061262d17069c3880764",
+          "mode": "jsonl",
+          "ordered_results_sha256": "92050c8a68f658aa66b8bdac056aedd8bdddd5b2e944b5fd6081153b1dc572d2",
+          "passed": false,
+          "process_ru_maxrss": 22572,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "565bdfa5c57f9ceeafb9e67267c8ab2ea31b8fa1cbdd6c0757577f7dee7a1075",
+          "summary": {
+            "failed": 455,
+            "missing": 0,
+            "passed": 4545,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 6694400,
+          "tracemalloc_peak_bytes": 62337
+        }
+      ],
+      "output_bytes_per_task": 128,
+      "score_parity": true,
+      "tasks": 5000
+    },
+    {
+      "fixture_bytes": {
+        "run.json": 21287079,
+        "run.jsonl": 21287153,
+        "suite.json": 1142852,
+        "suite.jsonl": 1142930
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 1.2480915330015705,
+          "logical_report_sha256": "87f265e269cb4e2bc95dcce452d5785ac35b2795c814fd9283b9980a9a195957",
+          "mode": "legacy",
+          "ordered_results_sha256": "92050c8a68f658aa66b8bdac056aedd8bdddd5b2e944b5fd6081153b1dc572d2",
+          "passed": false,
+          "process_ru_maxrss": 99356,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "bfc2b5881907f3e53c462cccb8a7defc5f2117fcaf43bbbee54a88131ae84648",
+          "summary": {
+            "failed": 455,
+            "missing": 0,
+            "passed": 4545,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 54483814
+        },
+        {
+          "elapsed_wall_seconds": 2.7115206590024172,
+          "logical_report_sha256": "87f265e269cb4e2bc95dcce452d5785ac35b2795c814fd9283b9980a9a195957",
+          "mode": "jsonl",
+          "ordered_results_sha256": "92050c8a68f658aa66b8bdac056aedd8bdddd5b2e944b5fd6081153b1dc572d2",
+          "passed": false,
+          "process_ru_maxrss": 22832,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "bfc2b5881907f3e53c462cccb8a7defc5f2117fcaf43bbbee54a88131ae84648",
+          "summary": {
+            "failed": 455,
+            "missing": 0,
+            "passed": 4545,
+            "total": 5000
+          },
+          "temporary_disk_peak_sampled_bytes": 28059136,
+          "tracemalloc_peak_bytes": 78508
+        }
+      ],
+      "output_bytes_per_task": 4096,
+      "score_parity": true,
+      "tasks": 5000
+    },
+    {
+      "fixture_bytes": {
+        "run.json": 85173443,
+        "run.jsonl": 85173518,
+        "suite.json": 4597853,
+        "suite.jsonl": 4597932
+      },
+      "measurements": [
+        {
+          "elapsed_wall_seconds": 5.2203469990054145,
+          "logical_report_sha256": "d0a59d9664ec16f3ce5489209cd6095f49fba3fed15491c3fba08813502eed29",
+          "mode": "legacy",
+          "ordered_results_sha256": "175c3eb6ff2bf2631141ad9d447b926d0bcb7b688a5830b77d63c07a14db5646",
+          "passed": false,
+          "process_ru_maxrss": 327280,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "2cd44a3db561a7e9e97803f0f014b156c3817e5fb49c89fad3756c2ecc6ee2c6",
+          "summary": {
+            "failed": 1819,
+            "missing": 0,
+            "passed": 18181,
+            "total": 20000
+          },
+          "temporary_disk_peak_sampled_bytes": 0,
+          "tracemalloc_peak_bytes": 218076029
+        },
+        {
+          "elapsed_wall_seconds": 11.625036903002183,
+          "logical_report_sha256": "d0a59d9664ec16f3ce5489209cd6095f49fba3fed15491c3fba08813502eed29",
+          "mode": "jsonl",
+          "ordered_results_sha256": "175c3eb6ff2bf2631141ad9d447b926d0bcb7b688a5830b77d63c07a14db5646",
+          "passed": false,
+          "process_ru_maxrss": 22564,
+          "process_ru_maxrss_unit": "KiB",
+          "suite_sha256": "2cd44a3db561a7e9e97803f0f014b156c3817e5fb49c89fad3756c2ecc6ee2c6",
+          "summary": {
+            "failed": 1819,
+            "missing": 0,
+            "passed": 18181,
+            "total": 20000
+          },
+          "temporary_disk_peak_sampled_bytes": 112301568,
+          "tracemalloc_peak_bytes": 74354
+        }
+      ],
+      "output_bytes_per_task": 4096,
+      "score_parity": true,
+      "tasks": 20000
+    }
+  ],
+  "environment": {
+    "platform": "Linux-5.15.153.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3 (main, Jan  8 2026, 11:30:50) [GCC 13.3.0]"
+  },
+  "measurement": {
+    "digest": "SHA-256 of canonical v1 metadata, passed, summary, row count and ordered canonical-row SHA-256",
+    "excludes": "fixture generation, child process startup and evaluator module import",
+    "fresh_process_per_case_and_mode": true,
+    "includes": "input loading, validation, scoring and compact report digest consumption",
+    "max_record_bytes": 1048576,
+    "ru_maxrss": "Whole child process lifetime peak; null on Windows; includes tracing overhead",
+    "temporary_disk": "Sampled logical file bytes in isolated evaluator scratch directory; a lower bound on peak, not allocated disk blocks",
+    "temporary_disk_sample_interval_seconds": 0.01,
+    "tracemalloc": "Python allocations during evaluation; excludes SQLite/native allocations"
+  },
+  "purpose": "Offline evaluator scaling; not provider performance or evidence of real workload demand",
+  "schema_version": 1,
+  "synthetic": true
+}

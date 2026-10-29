@@ -1,0 +1,6 @@
+{"format":"weasley-agent-bench/run-jsonl","format_version":1,"run_id":"synthetic-baseline","schema_version":1,"suite_id":"synthetic-agent-contracts-v1"}
+{"final":{"city":"Tokyo","evidence_ids":["m1"]},"status":"completed","task_id":"corrected-memory","tool_calls":[{"arguments":{"query":"\u73fe\u5728\u306e\u30aa\u30d5\u30a3\u30b9"},"name":"recall","outcome":"success","output":{"facts":[{"city":"Tokyo","id":"m1"}]}}],"usage":{"duration_ms":180,"input_tokens":260,"output_tokens":55}}
+{"final":{"item_id":42},"status":"completed","task_id":"retry-lookup","tool_calls":[{"arguments":{"key":"widget"},"name":"catalog.lookup","outcome":"error","output":{"code":"timeout"}},{"arguments":{"key":"widget"},"name":"catalog.lookup","outcome":"success","output":{"id":42}}],"usage":{"duration_ms":500,"input_tokens":170,"output_tokens":25}}
+{"final":{"findings":[],"revision":"abc123"},"status":"completed","task_id":"review-handoff","tool_calls":[{"arguments":{"revision":"abc123"},"name":"delegate","outcome":"success","output":{"findings":["missing-timeout"]}}],"usage":{"duration_ms":170,"input_tokens":200,"output_tokens":20}}
+{"final":{"status":"draft","subject":"Demo"},"status":"completed","task_id":"draft-only","tool_calls":[],"usage":{"duration_ms":80,"input_tokens":50,"output_tokens":20}}
+{"count":4,"end":true}
