@@ -190,6 +190,7 @@ ordinary version-1 run, so all existing validation and missing-task rules apply.
 The optional [synthetic subprocess integration](subagents-export.md#synthetic-subprocess-integration)
 checks these existing adapter rules against artifacts persisted by pinned
 `runSync`. It does not change the contract or certify model execution.
+
 `export-subagents --require-prompt-match` optionally rejects an initial saved
 prompt that is not exactly the selected task's prompt. It preserves the run
 schema and legacy unbound default. It checks only saved initial text, not
@@ -314,4 +315,3 @@ Malformed native evidence fails before export, while supported content mutations
 export and fail the relevant fidelity assertions. All usage remains unreported.
 Legacy and JSONL evaluation produce identical complete reports. See the
 [profile, source attribution, conversion losses and limits](tau2-fidelity.md).
-
