@@ -1,0 +1,6 @@
+{"format":"weasley-agent-bench/run-jsonl","format_version":1,"run_id":"synthetic-candidate","schema_version":1,"suite_id":"synthetic-agent-contracts-v1"}
+{"final":{"city":"\uc11c\uc6b8","evidence_ids":["m2"]},"status":"completed","task_id":"corrected-memory","tool_calls":[{"arguments":{"query":"\ud604\uc7ac \uc0ac\ubb34\uc2e4"},"name":"recall","outcome":"success","output":{"facts":[{"city":"\uc11c\uc6b8","id":"m2"}]}}],"usage":{"duration_ms":150,"input_tokens":210,"output_tokens":40}}
+{"final":{"item_id":42},"status":"completed","task_id":"retry-lookup","tool_calls":[{"arguments":{"key":"widget"},"name":"catalog.lookup","outcome":"error","output":{"code":"timeout"}},{"arguments":{"key":"widget"},"name":"catalog.lookup","outcome":"success","output":{"id":42}}],"usage":{"duration_ms":500,"input_tokens":170,"output_tokens":25}}
+{"final":{"findings":["missing-timeout"],"revision":"abc123"},"status":"completed","task_id":"review-handoff","tool_calls":[{"arguments":{"revision":"abc123"},"name":"delegate","outcome":"success","output":{"findings":["missing-timeout"]}}],"usage":{"duration_ms":220,"input_tokens":240,"output_tokens":65}}
+{"final":{"status":"draft","subject":"Demo"},"status":"completed","task_id":"draft-only","tool_calls":[],"usage":{"duration_ms":80,"input_tokens":50,"output_tokens":20}}
+{"count":4,"end":true}

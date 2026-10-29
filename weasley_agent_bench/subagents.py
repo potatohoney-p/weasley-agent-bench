@@ -32,9 +32,14 @@ def load_subagents_transcript(path: str) -> list[dict]:
     try:
         with Path(path).open("rb") as stream:
             raw = stream.read(MAX_TRANSCRIPT_BYTES + 1)
-        _require(len(raw) <= MAX_TRANSCRIPT_BYTES, "transcript exceeds size limit")
+    except (OSError, UnicodeError, ValueError):
+        # Invalid filesystem paths (including NUL) are input failures, not
+        # tracebacks. Do not expose the path or underlying exception text.
+        raise ContractError("subagents: cannot read UTF-8 transcript") from None
+    _require(len(raw) <= MAX_TRANSCRIPT_BYTES, "transcript exceeds size limit")
+    try:
         text = raw.decode("utf-8")
-    except (OSError, UnicodeError):
+    except UnicodeError:
         raise ContractError("subagents: cannot read UTF-8 transcript") from None
     _require(bool(text) and text.endswith("\n"), "incomplete JSONL framing")
     return [_json(line) for line in text[:-1].split("\n")]
@@ -49,13 +54,19 @@ def _text(message: dict) -> str:
 
 
 def export_subagents(suite: dict, records: list[dict], metadata: dict, *,
-                     task_id: str, run_id: str) -> dict:
+                     task_id: str, run_id: str, require_prompt_match: bool = False) -> dict:
     """Export one task, only for a complete, successful single-attempt artifact.
 
     Tool calls retain start order. Only the terminal assistant message becomes
     final; text blocks are joined by newline, never parsed as structured JSON.
+    Optional exact matching binds saved initial text to the selected suite prompt,
+    not metadata task labels, hidden context, or proof of execution.
     """
     validate_suite(suite)
+    _require(type(require_prompt_match) is bool, "require_prompt_match must be a boolean")
+    _require(isinstance(task_id, str), "task ID must be a string")
+    task = next((task for task in suite["tasks"] if task["id"] == task_id), None)
+    _require(task is not None, "unknown task ID")
     _require(isinstance(metadata, dict), "metadata must be an object")
     identity = (metadata.get("runId"), metadata.get("agent"))
     _require(all(isinstance(v, str) and v.strip() for v in identity), "missing run identity")
@@ -105,7 +116,10 @@ def export_subagents(suite: dict, records: list[dict], metadata: dict, *,
             if role == "user":
                 _require(index == 0 and record.get("sourceEventType") == "initial_prompt",
                          "only one initial prompt is supported")
-                _require(_text(message) == record.get("text"), "prompt text mismatch")
+                prompt = _text(message)
+                _require(prompt == record.get("text"), "prompt text mismatch")
+                if require_prompt_match:
+                    _require(prompt == task["prompt"], "initial prompt does not match selected suite task")
             elif role == "assistant":
                 _require(index > 0 and record.get("sourceEventType") == "message_end",
                          "unsupported assistant event")

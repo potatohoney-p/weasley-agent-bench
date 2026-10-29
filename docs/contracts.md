@@ -186,3 +186,132 @@ supported foreground artifact subset documented in [subagents-export.md](subagen
 It preserves saved text rather than parsing JSON-looking output, rejects
 incomplete recorded tool lifecycles, and omits uncertain usage. The output is an
 ordinary version-1 run, so all existing validation and missing-task rules apply.
+
+The optional [synthetic subprocess integration](subagents-export.md#synthetic-subprocess-integration)
+checks these existing adapter rules against artifacts persisted by pinned
+`runSync`. It does not change the contract or certify model execution.
+`export-subagents --require-prompt-match` optionally rejects an initial saved
+prompt that is not exactly the selected task's prompt. It preserves the run
+schema and legacy unbound default. It checks only saved initial text, not
+metadata task expansion, hidden context, authenticity or execution. See the
+[exact binding boundary](subagents-export.md#optional-exact-prompt-binding).
+
+The saved-transcript loader maps invalid filesystem paths, read failures and
+UTF-8 failures to content-safe input errors (CLI exit 2), while preserving size
+and framing diagnostics. Its bounded read is not a filesystem sandbox or a
+special-file timeout guarantee; see [input boundaries](subagents-export.md#input-error-boundary).
+
+### Optional equality-consistency preflight
+
+`lint_suite(..., check_assertions=True)` and `lint-suite --check-assertions`
+select `tool-budget-and-assertions-v1`. In addition to the existing budget rule,
+this detects a known complete ancestor equality that cannot satisfy a descendant
+equality within the same assertion list. Default lint reports, evaluation,
+comparison, provenance and input schema version 1 are unchanged. Intentional
+negative contracts remain evaluable. See [the exact rule and limits](contract-lint.md#opt-in-ancestor-equality-checks).
+
+## Bounded JSONL transport
+
+The opt-in `evaluate-jsonl` command accepts separately versioned suite/run JSONL
+files with strict metadata headers, existing v1 task/result objects, and required
+end markers with exact record counts. Records are bounded (default 1 MiB including
+newline bytes); errors identify source and physical line. Both inputs and scores
+are validated before any report is emitted. Disk-backed indexes preserve arbitrary
+run order, duplicate/unknown-ID rejection, suite-order rows, explicit missing
+failures, and the exact existing canonical suite digest. Output consists of a
+header, one result event per task, and a required completion summary. Consumers
+must reject partial output without that summary. Legacy JSON contracts and
+scoring are unchanged. See [the protocol and resource bounds](jsonl-evaluation.md).
+
+`compare-jsonl` accepts the same suite/run transports for a shared suite and two
+complete runs. It rejects missing coverage on either side, while retaining
+arbitrary order and allowing identical run IDs across sides. Change rows, jointly
+observed usage deltas, flags, and summary exactly match legacy `compare`. Its
+`weasley-agent-bench/comparison-jsonl` output has one header, ordered change
+events, and a required completion summary. Exit 0 means no regressions, not that
+all candidate tasks passed. Both input streams and all scores are validated before
+output. Matching suite IDs do not attest to historical suite contents; the supplied
+suite defines intentional rescoring. See [paired comparison](jsonl-comparison.md).
+
+`verify-provenance-jsonl` optionally checks the existing six-field v1 sidecar
+against explicitly supplied JSONL suite/run files. It recomputes both canonical
+v1 document digests in original record order after full contract/framing checks.
+The entire sidecar has a separate byte bound; no manifest paths or URLs are
+supported. Success emits the legacy verification JSON object, after all checks;
+errors emit no report. Valid incomplete runs may be consistent but do not gain
+coverage or successful scores. See [verification boundaries](jsonl-provenance.md).
+
+`compare-repeated-jsonl` accepts the same suite transport and separate strict
+`batch-jsonl` version-1 streams. Contiguous trial blocks contain run metadata,
+individual v1 result records and an exact trial-end count; a final batch-end count
+is required. Both sides need at least two complete trials and exactly matching
+trial IDs. Result IDs, trial IDs and per-batch run IDs cannot be duplicated.
+Analysis retains the legacy whole-trial bootstrap, Python trial order, suite
+digest, missing-coverage rejection and conditional statistical interpretation.
+All analysis completes before output, followed by trial/task events and a required
+terminal summary/interval. Exit 0 means valid descriptive analysis. See
+[the complete batch and output contract](jsonl-repeated.md).
+
+### JSONL completion and resource release
+
+`evaluate_jsonl`, `compare_jsonl` and `compare_repeated_jsonl` emit their final
+`complete: true` event only after closing the scratch database and successfully
+exiting its temporary-directory context. A consumer may stop at that event
+without an extra `next()`, `close()` or garbage collection to release scratch.
+Before that event, consumers must exhaust or explicitly close the iterator.
+
+Storage close/removal errors remain `ContractError`s; already-emitted headers
+and rows can remain visible, but no completion event is emitted. The CLI returns
+2 for these storage errors. Its streaming commands explicitly close iterators
+on output failures as well, including when another caller retains a reference.
+Output failures are not converted into a successful report. This is not atomic
+stdout publication, an fsync/durability guarantee, rollback of emitted bytes, or
+proof that a downstream sink accepted/flushed the terminal event. CLI consumers
+must check both the expected terminal event and the process exit status; scoring
+exit 1 still denotes a complete negative evaluation/comparison, not broken I/O.
+Cleanup failure may leave filesystem artifacts; it is never silently suppressed.
+
+The wire events, scores, ordering, provenance and successful exit-code policy
+are unchanged. Only scratch lifetime and completion/error ordering change. Tests
+use synthetic inputs and injected local storage/output faults, not real runs.
+
+### Optional named-check regression policy
+
+`compare` and `compare_jsonl` accept explicit `check_regressions=True` (CLI:
+`--check-regressions`). Defaults remain the binary-task gate. The opt-in extension
+marks `regression_policy: "checks-v1"`, adds ordered per-task check loss/gain
+codes and corresponding diagnostic counts, retains `task_no_regressions`, and
+sets `no_regressions` from whether any check changed true→false. Improvements
+cannot cancel losses on already failing tasks. Same-suite rescoring and complete
+coverage remain mandatory; generated check IDs must match unambiguously.
+See [the complete output/identity/missing-evidence contract](check-regressions.md).
+This is a stricter selected gate, not a new scoring schema or model-quality claim.
+
+### Nested value equality
+
+Equality traverses validated JSON containers iteratively, preserving object-key
+order independence, array order, numeric int/float equality and the distinction
+between booleans and numbers. Deep values that the existing loader, validator and
+canonical serializer accept must not fail solely because equality adds recursive
+Python frames. This applies to final assertions and tool argument/output checks,
+including comparison and repeated-trial callers in JSON and JSONL paths.
+
+This is not unlimited-depth JSON support: parsing, validation and canonical
+serialization retain their existing interpreter/resource limits. Cyclic Python
+objects are not JSON and remain unsupported. Traversal retains one iterator per
+active container; it does not flatten all descendants into a work list. No score,
+schema, digest protocol, provider execution or benchmark-quality claim changes.
+
+## Historical tau2 observation fidelity
+
+The opt-in library adapter and `python -m experiments.tau2_fidelity` workflow
+accept one strict minimized historical six-message profile. Native argument
+objects, explicit boolean outcomes and saved output text map to ordinary v1 tool
+fields. A labeled derived final observation contains assistant text, native
+episode/call identity and a canonical argument digest. A frozen reviewed suite
+checks fidelity through existing assertions; it does not evaluate task success.
+Malformed native evidence fails before export, while supported content mutations
+export and fail the relevant fidelity assertions. All usage remains unreported.
+Legacy and JSONL evaluation produce identical complete reports. See the
+[profile, source attribution, conversion losses and limits](tau2-fidelity.md).
+

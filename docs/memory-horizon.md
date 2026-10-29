@@ -58,6 +58,15 @@ runner must consume episodes in order and answer each session's questions
 before receiving future events. Keep the suite's `expect` values away from the
 runner. Store the suite digest with experiment results.
 
+Export refuses to overwrite any target artifact. It checks the whole set before
+writing, then creates each file exclusively so a competing writer that appears
+after that check is also preserved. This applies to optional provenance sidecars.
+An existing empty directory is allowed. A collision or other I/O failure stops
+the export; the CLI exits 2 without a success report. Earlier files may remain:
+this is not an atomic bundle transaction or a lock against later external edits.
+Do not treat a failed export's partial directory as complete evidence; retain
+the original artifacts and retry in a fresh directory.
+
 ## Optional measured timing
 
 ```bash
@@ -85,3 +94,29 @@ A useful next increment is a reviewed exporter from a real agent runtime using
 the same held-out contracts and cutoff discipline, then a larger suite with
 ambiguous aliases, retrieval distractors, and repeated trials. That work should
 report both errors and resource measurements before making model comparisons.
+
+### Export artifact namespace
+
+The Python `export` helper accepts run labels as ASCII filename stems: an initial
+letter or digit followed by letters, digits, `.`, `_`, or `-`. Labels are not
+paths. All generated filenames, including `report.json`, `suite.json`,
+`episodes.json`, runs and optional provenance sidecars, must be unique ignoring
+case. This rule also applies without provenance, and prevents an export prepared
+on a case-sensitive host from aliasing its own evidence on another host. Invalid
+names and collisions raise `ContractError` before creating the output directory
+or writing any artifact. This preflight does not promise transactional rollback
+on later I/O failure; exclusive file creation still protects existing evidence.
+
+### Portable device-name preflight
+
+Run labels also reject Windows device stems (`CON`, `PRN`, `AUX`, `NUL`,
+`COM1`–`COM9`, `LPT1`–`LPT9`) case-insensitively, including labels whose
+first dot follows one of those stems. Appending `.json` or `.provenance.json`
+does not make such a filename ordinary on Windows. Rejection happens before
+provenance construction, filesystem checks, directory creation or writes,
+on every platform; valid near-matches such as `console` and `safe.NUL` remain
+allowed. Spaces and non-ASCII superscript device digits are already excluded
+by the existing ASCII grammar. This is not a promise that every allowed name
+fits every filesystem/path-length limit, nor transactional rollback after I/O.
+
+See [Microsoft file naming rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).

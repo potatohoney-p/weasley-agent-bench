@@ -21,7 +21,8 @@ expanding this supported subset.
 ## Mapping and completeness boundary
 
 The caller explicitly supplies the benchmark task ID and run ID. The adapter
-validates the task exists but does not claim that prompt equivalence was checked.
+validates the task exists. By default it does not check prompt equivalence;
+use `--require-prompt-match` to require exact initial saved prompt equality.
 Other suite tasks remain missing under the existing evaluator semantics.
 
 - Every record must have version 1, source `foreground`, the same runId/agent as
@@ -102,6 +103,44 @@ unsupported final content and completion reordering are tested separately.
 A genuinely recorded, consented, sanitized real-run validation remains future
 work; this fixture establishes format parity only.
 
+## Synthetic subprocess integration
+
+A second opt-in test now drives the pinned upstream `runSync` entry point. A
+small **synthetic replacement child**, not Pi or an LLM, runs as a real local
+subprocess and reads a newly created synthetic note from a temporary workspace.
+The harness itself parses its stdout and writes both transcript and metadata;
+the test does not handwrite either artifact. The exporter and CLI then consume
+those generated artifacts and compare against an independently specified result.
+
+On POSIX with Node 24, Python 3.11+, and a clean upstream checkout at the exact
+revision above, install that checkout's locked dependencies (`npm ci
+--ignore-scripts --no-audit --no-fund`), then run:
+
+```sh
+WEASLEY_SUBAGENTS_TEST_SOURCE=/absolute/path/to/pinned/weasley-subagents \
+  python -m unittest discover -s tests -p test_subagents_runtime.py -v
+```
+
+The dedicated Ubuntu CI job performs this test separately from the normal
+Python-only tests. Dependency installation needs network access, but the test
+uses no provider, credentials, model or private sessions. It isolates HOME and
+agent settings, clears inherited environment variables except OS process-launch
+paths, and points the runtime only at the generated child. This is test isolation,
+not a security sandbox for arbitrary upstream code or dependencies. The checkout
+and its dependencies must be trusted. The source pin/clean-source checks prevent
+silently testing a modified runtime; they do not authenticate the dependency
+installation. The existing Apache-2.0 provenance and NOTICE obligations apply.
+
+Five assertion groups cover generated metadata/CLI parity, repeatable benchmark
+projection despite varying raw timestamps/paths, a real child exit code 7, a
+missing tool-result event despite exit code 0, and a mismatched generated run ID.
+Unknown usage remains omitted, even though upstream metadata normalizes it to
+zeros. Temporary raw artifacts are deleted after each capture, not committed.
+The synthetic child emits a fixed protocol and performs a controlled file read;
+this validates integration with the harness's persistence path, **not** real Pi
+tool execution, provider behavior, untrusted-process containment, or real model
+performance. Recorded, consented real-model validation remains future work.
+
 ### Deliberately distinct from runtime finalOutput
 
 The final field here represents the terminal transcript message's joined text,
@@ -117,7 +156,31 @@ Additional metadata fields (task, usage, duration, transcriptPath, timestamps,
 contracts, acceptance/effects and audit information) are not imported as benchmark
 facts or checked for equivalence. Task assignment is explicit at the CLI; metadata
 `task` can differ from the expanded initial prompt. Their presence does not add
-trust. Only the lifecycle and identity fields described above are validated.
+trust. These fields remain outside validation, including in exact prompt mode.
+
+## Optional exact prompt binding
+
+Use `export-subagents ... --require-prompt-match` (Python API:
+`require_prompt_match=True`) when the suite prompt is the exact text sent to the
+child. After validating the initial message/text consistency, the adapter
+compares its joined text blocks to the **selected** suite task's `prompt`.
+A mismatch fails with exit 2 and no exported run. Diagnostics do not echo either
+prompt. Missing/invalid task IDs and non-boolean Python option values also fail.
+Matching exports retain the ordinary version-1 run shape and identical scores.
+
+Equality is literal: no trimming, newline conversion, case folding, Unicode
+normalization or semantic similarity is applied. Multi-block text uses the
+existing newline-join projection. The mode does not compare metadata `task`,
+which can be an unexpanded instruction; that field cannot override a mismatched
+saved initial prompt. It also does not bind system prompts, project context,
+tools, model configuration, or hidden input. A forged matching trace can pass.
+
+For a harness that expands the initial prompt, either construct the suite with
+that exact saved prompt or retain the documented default unbound mode. The
+adapter never silently falls back from requested exact matching. This gate is
+not a signature or proof of execution. The exported run does not carry evidence
+that the option was used: retain the invocation/validation log separately when
+that matters for an audit; an ordinary provenance hash alone does not prove it.
 
 ## Third-party provenance
 
@@ -130,3 +193,15 @@ No upstream source is vendored here. This repository's MIT license does not
 relicense that external source; preserve its applicable notices when using or
 redistributing it. The checked-in fixture is synthetic generated output, not a
 recorded model run.
+
+## Input error boundary
+
+The file loader reads at most 50 MiB plus one byte and rejects over-limit input
+before decoding. The limit is bytes, not Unicode characters. Invalid filesystem
+paths, read errors, and invalid UTF-8 become content-safe `ContractError`s; the
+CLI returns exit 2 with a JSON error and no exported output. The path and
+underlying exception text are not included. Malformed JSON/framing and size
+limit failures retain their separate diagnostics. Embedded NUL is only possible
+through Python `main(argv)`/loader calls, not ordinary OS command-line arguments.
+This boundary is not a filesystem sandbox or a guarantee against blocking reads
+from special files. The caller must choose an appropriate saved transcript file.

@@ -31,21 +31,33 @@ def _at_pointer(document: Any, pointer: str) -> Any:
 
 def _equal(actual: Any, expected: Any) -> bool:
     """JSON equality: object order is irrelevant, but true is not the number 1."""
-    if actual is _MISSING:
-        return False
-    if type(actual) in (int, float) and type(expected) in (int, float):
-        return actual == expected
-    if type(actual) is not type(expected):
-        return False
-    if isinstance(actual, dict):
-        return actual.keys() == expected.keys() and all(
-            _equal(actual[key], expected[key]) for key in actual
-        )
-    if isinstance(actual, list):
-        return len(actual) == len(expected) and all(
-            _equal(left, right) for left, right in zip(actual, expected)
-        )
-    return actual == expected
+    # Keep iterators, not recursive Python frames or a materialized work list.
+    # Validation already rejects non-JSON values; this adds no new input types.
+    stack = [iter(((actual, expected),))]
+    while stack:
+        try:
+            left, right = next(stack[-1])
+        except StopIteration:
+            stack.pop()
+            continue
+        if left is _MISSING:
+            return False
+        if type(left) in (int, float) and type(right) in (int, float):
+            if left != right:
+                return False
+        elif type(left) is not type(right):
+            return False
+        elif isinstance(left, dict):
+            if left.keys() != right.keys():
+                return False
+            stack.append(iter(zip(left.values(), map(right.__getitem__, left))))
+        elif isinstance(left, list):
+            if len(left) != len(right):
+                return False
+            stack.append(iter(zip(left, right)))
+        elif left != right:
+            return False
+    return True
 
 
 def _check(code: str, passed: bool, detail: str) -> dict:
@@ -90,37 +102,39 @@ def _tool_checks(calls: list, contract: dict) -> list[dict]:
     return checks
 
 
+def _evaluate_task(task: dict, result: dict | None) -> dict:
+    """Score one validated task/result pair; shared by both input transports."""
+    checks = [_check("result.present", result is not None, "a result was supplied for this task")]
+    if result is not None:
+        checks.append(_check("result.completed", result["status"] == "completed", "agent completed the task"))
+        expected = task["expect"]
+        checks.extend(_assertion_checks(result["final"], expected.get("final", []), "final"))
+        calls = result["tool_calls"]
+        if "tools" in expected:
+            checks.extend(_tool_checks(calls, expected["tools"]))
+        forbidden = set(expected.get("forbidden_tools", []))
+        if forbidden:
+            checks.append(_check("tools.forbidden", not any(call["name"] in forbidden for call in calls),
+                                 "no forbidden tool was called"))
+        for limit_name, limit in sorted(task.get("budget", {}).items()):
+            metric = limit_name.removeprefix("max_")
+            observed = len(calls) if metric == "tool_calls" else result.get("usage", {}).get(metric)
+            checks.append(_check(f"budget.{metric}", observed is not None and observed <= limit,
+                                 "usage is present and within the configured cap"))
+    return {
+        "task_id": task["id"],
+        "status": result["status"] if result else "missing",
+        "passed": all(check["passed"] for check in checks),
+        "checks": checks,
+    }
+
+
 def evaluate(suite: dict, run: dict) -> dict:
     """Score every suite task in suite order, including absent results as failures."""
     validate_suite(suite)
     validate_run(run, suite)
     by_id = {result["task_id"]: result for result in run["results"]}
-    rows: list[dict] = []
-    for task in suite["tasks"]:
-        result = by_id.get(task["id"])
-        checks = [_check("result.present", result is not None, "a result was supplied for this task")]
-        if result is not None:
-            checks.append(_check("result.completed", result["status"] == "completed", "agent completed the task"))
-            expected = task["expect"]
-            checks.extend(_assertion_checks(result["final"], expected.get("final", []), "final"))
-            calls = result["tool_calls"]
-            if "tools" in expected:
-                checks.extend(_tool_checks(calls, expected["tools"]))
-            forbidden = set(expected.get("forbidden_tools", []))
-            if forbidden:
-                checks.append(_check("tools.forbidden", not any(call["name"] in forbidden for call in calls),
-                                     "no forbidden tool was called"))
-            for limit_name, limit in sorted(task.get("budget", {}).items()):
-                metric = limit_name.removeprefix("max_")
-                observed = len(calls) if metric == "tool_calls" else result.get("usage", {}).get(metric)
-                checks.append(_check(f"budget.{metric}", observed is not None and observed <= limit,
-                                     "usage is present and within the configured cap"))
-        rows.append({
-            "task_id": task["id"],
-            "status": result["status"] if result else "missing",
-            "passed": all(check["passed"] for check in checks),
-            "checks": checks,
-        })
+    rows = [_evaluate_task(task, by_id.get(task["id"])) for task in suite["tasks"]]
     passed = sum(row["passed"] for row in rows)
     return {
         "schema_version": 1,
@@ -134,8 +148,61 @@ def evaluate(suite: dict, run: dict) -> dict:
     }
 
 
-def compare(suite: dict, baseline: dict, candidate: dict) -> dict:
-    """Compare paired tasks, rejecting incomplete coverage rather than dropping it."""
+def _validate_check_policy(check_regressions: bool) -> None:
+    if type(check_regressions) is not bool:
+        raise ContractError("check_regressions must be a boolean")
+
+
+def _check_transitions(old: list[dict], new: list[dict]) -> dict:
+    # Checks are generated from the SAME validated task, not caller-supplied
+    # reports. Still fail closed if a future scorer changes identity/coverage.
+    def indexed(checks: list[dict]) -> dict:
+        result = {}
+        for check in checks:
+            code, passed = check.get("code"), check.get("passed")
+            if type(code) is not str or code in result or type(passed) is not bool:
+                raise ContractError("comparison requires unambiguous check identities and booleans")
+            result[code] = passed
+        return result
+    before, after = indexed(old), indexed(new)
+    if before.keys() != after.keys():
+        raise ContractError("comparison check identities do not match")
+    return {
+        "check_regressions": [code for code in before if before[code] and not after[code]],
+        "check_improvements": [code for code in before if not before[code] and after[code]],
+    }
+
+
+def _comparison_gate(summary: dict, check_regressions: bool) -> dict:
+    if check_regressions:
+        return {"no_regressions": summary["check_regressions"] == 0,
+                "task_no_regressions": summary["regressions"] == 0}
+    return {"no_regressions": summary["regressions"] == 0}
+
+
+def _compare_rows(old: dict, new: dict, old_usage: dict, new_usage: dict, *,
+                  check_regressions: bool = False) -> dict:
+    """Compare a complete, validated task pair using either input transport."""
+    change = "unchanged"
+    if old["passed"] and not new["passed"]:
+        change = "regression"
+    elif not old["passed"] and new["passed"]:
+        change = "improvement"
+    return {
+        "task_id": old["task_id"],
+        "change": change,
+        "baseline_passed": old["passed"],
+        "candidate_passed": new["passed"],
+        "usage_delta": {key: new_usage[key] - old_usage[key] for key in USAGE_FIELDS
+                        if key in old_usage and key in new_usage},
+        "failed_checks": [check["code"] for check in new["checks"] if not check["passed"]],
+        **(_check_transitions(old["checks"], new["checks"]) if check_regressions else {}),
+    }
+
+
+def compare(suite: dict, baseline: dict, candidate: dict, *, check_regressions: bool = False) -> dict:
+    """Compare complete paired tasks; optionally gate every named check loss."""
+    _validate_check_policy(check_regressions)
     before = evaluate(suite, baseline)
     after = evaluate(suite, candidate)
     if before["summary"]["missing"] or after["summary"]["missing"]:
@@ -145,34 +212,26 @@ def compare(suite: dict, baseline: dict, candidate: dict) -> dict:
     changes: list[dict] = []
     for old, new in zip(before["results"], after["results"]):
         task_id = old["task_id"]
-        change = "unchanged"
-        if old["passed"] and not new["passed"]:
-            change = "regression"
-        elif not old["passed"] and new["passed"]:
-            change = "improvement"
         old_usage = old_results[task_id].get("usage", {})
         new_usage = new_results[task_id].get("usage", {})
-        changes.append({
-            "task_id": task_id,
-            "change": change,
-            "baseline_passed": old["passed"],
-            "candidate_passed": new["passed"],
-            "usage_delta": {key: new_usage[key] - old_usage[key] for key in USAGE_FIELDS
-                            if key in old_usage and key in new_usage},
-            "failed_checks": [check["code"] for check in new["checks"] if not check["passed"]],
-        })
-    regressions = sum(item["change"] == "regression" for item in changes)
+        changes.append(_compare_rows(old, new, old_usage, new_usage, check_regressions=check_regressions))
+    summary = {"total": len(changes), "regressions": sum(item["change"] == "regression" for item in changes),
+               "improvements": sum(item["change"] == "improvement" for item in changes),
+               "baseline_passed": before["summary"]["passed"],
+               "candidate_passed": after["summary"]["passed"]}
+    if check_regressions:
+        summary.update(check_regressions=sum(len(row["check_regressions"]) for row in changes),
+                       check_improvements=sum(len(row["check_improvements"]) for row in changes),
+                       tasks_with_check_regressions=sum(bool(row["check_regressions"]) for row in changes))
     return {
         "schema_version": 1,
         "suite_id": suite["suite_id"],
         "suite_sha256": before["suite_sha256"],
         "baseline_run_id": baseline["run_id"],
         "candidate_run_id": candidate["run_id"],
-        "no_regressions": regressions == 0,
+        **_comparison_gate(summary, check_regressions),
+        **({"regression_policy": "checks-v1"} if check_regressions else {}),
         "candidate_passed": after["passed"],
-        "summary": {"total": len(changes), "regressions": regressions,
-                    "improvements": sum(item["change"] == "improvement" for item in changes),
-                    "baseline_passed": before["summary"]["passed"],
-                    "candidate_passed": after["summary"]["passed"]},
+        "summary": summary,
         "changes": changes,
     }

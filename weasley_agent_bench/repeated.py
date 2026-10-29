@@ -8,6 +8,40 @@ from .contracts import ContractError, _array, _fail, _object, _string, validate_
 from .scoring import evaluate
 
 
+def _validate_analysis(seed: int, resamples: int) -> None:
+    if type(seed) is not int or not 0 <= seed <= 2**64 - 1:
+        _fail("analysis.seed", "expected an integer from 0 through 2^64 - 1")
+    if type(resamples) is not int or not 100 <= resamples <= 100000:
+        _fail("analysis.resamples", "expected an integer from 100 through 100000")
+
+
+def _bootstrap_interval(differences, task_count: int, seed: int, resamples: int) -> dict:
+    """Use indexed deltas so the same algorithm can read lists or disk storage."""
+    trial_count = len(differences)
+    denominator = task_count * trial_count
+    rng = random.Random(seed)
+    # Keep exact integer totals, one whole paired trial per draw. B is bounded
+    # by _validate_analysis; input-sized differences need not live in memory.
+    totals = sorted(sum(differences[rng.randrange(trial_count)] for _ in range(trial_count))
+                    for _ in range(resamples))
+    return {"lower": totals[(resamples + 39) // 40 - 1] / denominator,
+            "upper": totals[(39 * resamples + 39) // 40 - 1] / denominator}
+
+
+def _analysis_metadata(seed: int, resamples: int) -> dict:
+    return {
+        "method": "paired-trial-percentile-bootstrap-v1",
+        "estimand": "candidate-minus-baseline mean pass rate on the fixed suite",
+        "resampling_unit": "complete paired suite trial",
+        "scope": "conditional on this fixed suite and independent representative trial pairs",
+        "confidence_level": 0.95,
+        "seed": seed,
+        "resamples": resamples,
+        "rng": "python.random.Random",
+        "quantiles": "empirical inverse CDF, no interpolation",
+    }
+
+
 def _score_batch(suite: dict, batch: dict, path: str) -> dict[str, dict]:
     _object(batch, path, {"schema_version", "suite_id", "batch_id", "trials"})
     if type(batch["schema_version"]) is not int or batch["schema_version"] != 1:
@@ -50,10 +84,7 @@ def compare_repeated(
     assumption supplied by the runner, not something saved results can prove.
     """
     validate_suite(suite)
-    if type(seed) is not int or not 0 <= seed <= 2**64 - 1:
-        _fail("analysis.seed", "expected an integer from 0 through 2^64 - 1")
-    if type(resamples) is not int or not 100 <= resamples <= 100000:
-        _fail("analysis.resamples", "expected an integer from 100 through 100000")
+    _validate_analysis(seed, resamples)
     before = _score_batch(suite, baseline, "baseline")
     after = _score_batch(suite, candidate, "candidate")
     if before.keys() != after.keys():
@@ -77,16 +108,7 @@ def compare_repeated(
             "pass_rate_delta": (new_count - old_count) / task_count,
         })
 
-    # Sort integer totals and divide only at report time to avoid accumulating
-    # floating-point rounding. Use a local RNG without changing global state.
-    rng = random.Random(seed)
-    totals = sorted(
-        sum(differences[rng.randrange(trial_count)] for _ in trial_ids)
-        for _ in range(resamples)
-    )
-    # Empirical inverse-CDF percentiles: ceil(p * B) - 1, without interpolation.
-    lower = totals[(resamples + 39) // 40 - 1] / denominator
-    upper = totals[(39 * resamples + 39) // 40 - 1] / denominator
+    interval = _bootstrap_interval(differences, task_count, seed, resamples)
     tasks = []
     for index, task in enumerate(suite["tasks"]):
         old = [before[trial_id]["results"][index]["passed"] for trial_id in trial_ids]
@@ -105,17 +127,7 @@ def compare_repeated(
         "suite_sha256": before[trial_ids[0]]["suite_sha256"],
         "baseline_batch_id": baseline["batch_id"],
         "candidate_batch_id": candidate["batch_id"],
-        "analysis": {
-            "method": "paired-trial-percentile-bootstrap-v1",
-            "estimand": "candidate-minus-baseline mean pass rate on the fixed suite",
-            "resampling_unit": "complete paired suite trial",
-            "scope": "conditional on this fixed suite and independent representative trial pairs",
-            "confidence_level": 0.95,
-            "seed": seed,
-            "resamples": resamples,
-            "rng": "python.random.Random",
-            "quantiles": "empirical inverse CDF, no interpolation",
-        },
+        "analysis": _analysis_metadata(seed, resamples),
         "summary": {
             "tasks": task_count,
             "trial_pairs": trial_count,
@@ -123,7 +135,7 @@ def compare_repeated(
             "candidate_pass_rate": sum(row["candidate_passed"] for row in trials) / denominator,
             "pass_rate_delta": sum(differences) / denominator,
         },
-        "interval": {"lower": lower, "upper": upper},
+        "interval": interval,
         "trials": trials,
         "tasks": tasks,
     }
